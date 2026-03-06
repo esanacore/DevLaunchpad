@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DevLaunchpad (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "DevLaunchpad (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
