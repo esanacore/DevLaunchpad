@@ -33,6 +33,7 @@ jobs:
               }
             );
 
+            // GITHUB_WORKFLOW_REF format: owner/repo/.github/workflows/file.yml@ref
             const workflowRefPath = (process.env.GITHUB_WORKFLOW_REF || '').split('@')[0];
             const workflowPrefix = `${context.repo.owner}/${context.repo.repo}/`;
             const workflowPath = workflowRefPath.startsWith(workflowPrefix)
@@ -48,6 +49,7 @@ jobs:
               }
 
               if (path.startsWith('.github/workflows/')) {
+                // Exclude this workflow file to avoid a self-referential README requirement.
                 if (workflowPath && path === workflowPath) {
                   return false;
                 }
