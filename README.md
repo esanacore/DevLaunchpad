@@ -88,3 +88,9 @@ Example config:
     }
   ]
 }
+
+## Design References
+
+Issue-specific screenshots and UI reference assets can be stored under:
+
+- `docs/images/`
