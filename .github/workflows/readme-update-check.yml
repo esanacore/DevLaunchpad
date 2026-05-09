@@ -5,6 +5,10 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: ["main"]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   enforce-readme-update:
     runs-on: ubuntu-latest
@@ -33,21 +37,11 @@ jobs:
 
             const codeTouched = files.some(file => {
               const path = file.filename;
-              if (path === 'README.md' || path.startsWith('docs/') || path.startsWith('.github/')) {
+              if (path === 'README.md' || path.startsWith('docs/')) {
                 return false;
               }
 
-              return (
-                path.endsWith('.cs') ||
-                path.endsWith('.csproj') ||
-                path.endsWith('.sln') ||
-                path.endsWith('.props') ||
-                path.endsWith('.targets') ||
-                path.endsWith('.json') ||
-                path.endsWith('.manifest') ||
-                path.endsWith('.yml') ||
-                path.endsWith('.yaml')
-              );
+              return !path.toLowerCase().endsWith('.md');
             });
 
             if (codeTouched && !readmeTouched) {
