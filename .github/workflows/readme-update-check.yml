@@ -1,0 +1,60 @@
+name: README Update Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["main"]
+
+jobs:
+  enforce-readme-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate README update for code changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr || pr.draft) {
+              core.info('Draft PR or no PR context; skipping README check.');
+              return;
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100
+              }
+            );
+
+            const readmeTouched = files.some(file => file.filename === 'README.md');
+
+            const codeTouched = files.some(file => {
+              const path = file.filename;
+              if (path === 'README.md' || path.startsWith('docs/') || path.startsWith('.github/')) {
+                return false;
+              }
+
+              return (
+                path.endsWith('.cs') ||
+                path.endsWith('.csproj') ||
+                path.endsWith('.sln') ||
+                path.endsWith('.props') ||
+                path.endsWith('.targets') ||
+                path.endsWith('.json') ||
+                path.endsWith('.manifest') ||
+                path.endsWith('.yml') ||
+                path.endsWith('.yaml')
+              );
+            });
+
+            if (codeTouched && !readmeTouched) {
+              core.setFailed(
+                'Code-related changes were detected without updating README.md. Please update README.md to reflect user-facing or workflow changes.'
+              );
+              return;
+            }
+
+            core.info('README check passed.');
