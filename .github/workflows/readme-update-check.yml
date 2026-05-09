@@ -33,6 +33,9 @@ jobs:
               }
             );
 
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || '';
+            const workflowPath = workflowRef ? workflowRef.split('@')[0].split('/').slice(2).join('/') : '';
+
             const readmeTouched = files.some(file => file.filename === 'README.md');
 
             const codeTouched = files.some(file => {
@@ -42,7 +45,7 @@ jobs:
               }
 
               if (path.startsWith('.github/workflows/')) {
-                if (path === '.github/workflows/readme-update-check.yml') {
+                if (workflowPath && path === workflowPath) {
                   return false;
                 }
                 return true;
@@ -60,7 +63,7 @@ jobs:
 
             if (codeTouched && !readmeTouched) {
               core.setFailed(
-                'Code-related changes were detected without updating README.md. Please update README.md to reflect user-facing or workflow changes.'
+                'Code/workflow changes were detected without updating README.md. Update README.md when behavior/setup/workflow docs should change, or explain in the PR why no README update is needed.'
               );
               return;
             }
