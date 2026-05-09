@@ -42,6 +42,9 @@ jobs:
               }
 
               if (path.startsWith('.github/workflows/')) {
+                if (path === '.github/workflows/readme-update-check.yml') {
+                  return false;
+                }
                 return true;
               }
 
