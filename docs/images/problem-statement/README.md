@@ -13,4 +13,4 @@ This folder tracks the four UI reference images provided in the problem statemen
 3. https://github.com/user-attachments/assets/9fb8cb27-ffa3-493f-b4b5-89c516da9094
 4. https://github.com/user-attachments/assets/080c94ef-ab8c-4a79-8ebe-63bf9b7651ff
 
-> Note: these links currently return `404 Not Found` from this environment, so the binary image files could not be downloaded directly into the repository.
+> Note: these are the original links from the problem statement. If they are inaccessible in your environment, replace them with direct file uploads in this folder using the same ordering (`image-1` to `image-4`).
