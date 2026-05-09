@@ -1,0 +1,13 @@
+interface:
+  display_name: "Multi-Model Review"
+  short_description: "Ask configured external AI models to critique a diff, plan, draft, or code artifact."
+  brand_color: "#10A37F"
+  default_prompt: "Use $multi-model-review to review the current diff before finalizing."
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "multiModelReview"
+      description: "External AI review board MCP server."
+      transport: "stdio"

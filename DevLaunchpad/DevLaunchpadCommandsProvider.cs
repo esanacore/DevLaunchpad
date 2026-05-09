@@ -1,7 +1,5 @@
 using DevLaunchpad.Pages;
 using Microsoft.CommandPalette.Extensions.Toolkit;
-using System.Diagnostics;
-
 
 namespace DevLaunchpad;
 
@@ -9,7 +7,8 @@ namespace DevLaunchpad;
 /// Provides command definitions for the Dev Launchpad extension.
 /// 
 /// This class defines all top-level commands available through the Command Palette,
-/// including quick access to developer tools like GitHub, PowerShell, and Visual Studio Code.
+/// including quick access to repositories, developer tools, local servers, favorite websites,
+/// custom commands, and configuration management.
 /// </summary>
 public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
 {
@@ -21,8 +20,7 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
     /// <summary>
     /// Initializes a new instance of the DevLaunchpadCommandsProvider.
     /// 
-    /// Sets up the extension display name, icon, and defines all available commands.
-    /// Each command is configured with a title, subtitle, and an associated action.
+    /// Sets up the extension display name, icon, and defines all available commands and pages.
     /// </summary>
     public DevLaunchpadCommandsProvider()
     {
@@ -31,43 +29,53 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
 
         _commands =
         [
-            /// <summary>Quick link to GitHub repository.</summary>
+            // Main navigation pages
             new CommandItem(
-                title: "Open GitHub",
-                subtitle: "Launch github.com"
+                title: "Repositories",
+                subtitle: "Browse and open Git repositories"
             )
             {
-                Command = new OpenUrlCommand("https://github.com")
+                Command = new RepoPage()
             },
-            /// <summary>Launches PowerShell for command-line operations.</summary>
+
             new CommandItem(
-                title: "Open PowerShell",
-                subtitle: "Launch PowerShell"
+                title: "Developer Tools",
+                subtitle: "Quick access to dev applications"
             )
             {
-                Command = new AnonymousCommand(() =>
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = "powershell.exe",
-                            UseShellExecute = true
-                        });
-                    })
+                Command = new DevToolsPage()
             },
-            /// <summary>Launches Visual Studio Code editor.</summary>
+
             new CommandItem(
-                title: "Open VS Code",
-                subtitle: "Launch Visual Studio Code"
+                title: "Local Servers",
+                subtitle: "Open localhost development URLs"
             )
             {
-                Command = new AnonymousCommand(() =>
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = "code",
-                            UseShellExecute = true
-                        });
-                    })
+                Command = new LocalServersPage()
+            },
+
+            new CommandItem(
+                title: "Favorite Websites",
+                subtitle: "Quick access to bookmarked sites"
+            )
+            {
+                Command = new FavoriteWebsitesPage()
+            },
+
+            new CommandItem(
+                title: "Custom Commands",
+                subtitle: "Run your configured custom commands"
+            )
+            {
+                Command = new CustomCommandsPage()
+            },
+
+            new CommandItem(
+                title: "Configuration",
+                subtitle: "Manage Dev Launchpad settings"
+            )
+            {
+                Command = new ConfigPage()
             }
         ];
     }

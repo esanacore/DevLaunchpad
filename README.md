@@ -1,82 +1,274 @@
 # Dev Launchpad
 
-Dev Launchpad is a Microsoft PowerToys Command Palette extension for quickly opening developer tools, repositories, local servers, favorite websites, and custom commands.
+A Microsoft PowerToys Command Palette extension for managing developer workflows. Quickly access Git repositories, launch developer tools, open local servers, manage favorite websites, and execute custom commands—all from a single, fast interface integrated with Windows Command Palette.
+
+## Project Structure
+
+```
+DevLaunchpad/
+├── DevLaunchpad/                    # Main extension project
+│   ├── DevLaunchpad.cs             # Extension entry point (IExtension)
+│   ├── Program.cs                  # COM server registration
+│   ├── DevLaunchpadCommandsProvider.cs  # Command definitions
+│   ├── DevLaunchpadConfig.cs       # Configuration management
+│   ├── DevLaunchpadJsonContext.cs  # JSON serialization (AOT-compatible)
+│   ├── Pages/                      # Feature implementations
+│   │   ├── RepoPage.cs            # Git repository browser
+│   │   ├── RepoActionsPage.cs     # Repository actions (open/edit/terminal)
+│   │   ├── DevToolsPage.cs        # Developer tools launcher
+│   │   ├── LocalServersPage.cs    # Local URL management
+│   │   ├── FavoriteWebsitesPage.cs # Website bookmarks
+│   │   ├── CustomCommandsPage.cs   # Custom command executor
+│   │   └── ConfigPage.cs          # Configuration management UI
+│   ├── Assets/                     # Icons and visual assets
+│   ├── Package.appxmanifest       # MSIX package manifest
+│   └── DevLaunchpad.csproj        # Project file
+├── docs/                           # Documentation and assets
+│   └── images/                    # Screenshots and diagrams
+├── CHANGELOG.md                    # Version history
+└── README.md                       # This file
+```
 
 ## Features
 
-- Launch common developer apps
-- Discover and open Git repositories from a configured root folder
-- Open repositories in File Explorer, your editor, or a terminal
-- Launch local development URLs
-- Open favorite websites from config
-- Run configurable custom commands
-- Manage settings through a generated `config.json`
+- **Repository Management**: Automatically discover and access Git repositories
+- **Developer Tools**: Quick launch for VS Code, PowerShell, Windows Terminal
+- **Local Servers**: One-click access to localhost development URLs
+- **Favorite Websites**: Bookmark and quickly open frequently used sites
+- **Custom Commands**: Execute configurable commands (URLs, folders, executables, terminal sessions)
+- **Configuration Management**: JSON-based config with auto-reload and debug logging
+
+## Quick Start
+
+### Prerequisites
+
+1. **PowerToys** (version with Command Palette support)
+   - Download from: https://github.com/microsoft/PowerToys/releases
+   - Ensure Command Palette is enabled in PowerToys Settings
+
+2. **Windows 10/11** (version 19041 or higher)
+
+3. **Visual Studio 2022 or later** (for building from source)
+
+### Installation
+
+#### Option 1: From Source
+
+1. Clone the repository:
+   ```powershell
+   git clone https://github.com/esanacore/DevLaunchpad
+   cd DevLaunchpad
+   ```
+
+2. Open `DevLaunchpad.sln` in Visual Studio
+
+3. Build and deploy:
+   - Set configuration to `Debug` or `Release`
+   - Press `F5` to build and deploy
+   - Or use: Build → Deploy Solution
+
+4. Reload extensions in Command Palette:
+   - Press `Win+Alt+Space`
+   - Type `reload`
+   - Select "Reload extensions"
+
+#### Option 2: From Microsoft Store (Coming Soon)
+
+Once published, install directly from the Microsoft Store.
+
+### First Launch
+
+1. Open Command Palette: Press `Win+Alt+Space`
+2. Type "Dev Launchpad" or "dev"
+3. You'll see 6 main commands:
+   - Repositories
+   - Developer Tools
+   - Local Servers
+   - Favorite Websites
+   - Custom Commands
+   - Configuration
+
+4. Navigate to **Configuration** to:
+   - View config file location
+   - Edit settings
+   - Set your repo root folder
+   - Configure editor and terminal preferences
 
 ## Current Functionality
 
-### Developer Apps
-- Open VS Code / configured editor
-- Open PowerShell
-- Open Windows Terminal
-
-### Repositories
-- Recursively scans a configured repo root
+### 📁 Repositories (`RepoPage`)
+- Recursively scans configured repo root for Git repositories
 - Detects repositories by `.git` folders
-- Opens repos in:
-  - File Explorer
-  - configured editor
-  - configured terminal
+- For each repository, provides actions:
+  - **Open Folder**: Opens in Windows Explorer
+  - **Open in Editor**: Opens in configured editor (VS Code, etc.)
+  - **Open in Terminal**: Opens configured terminal in repo directory
+- Displays relative paths from repo root for easy navigation
 
-### Local Servers
-- Opens configurable localhost URLs
+### 🛠️ Developer Tools (`DevToolsPage`)
+Quick launch for common development applications:
+- **VS Code** (or configured editor)
+- **PowerShell**
+- **Windows Terminal** (or configured terminal)
 
-### Favorite Websites
-- Opens configurable bookmarks
+### 🌐 Local Servers (`LocalServersPage`)
+- Opens configurable localhost development URLs
+- Default includes common ports: 3000, 5173, 8000
+- Fully customizable via `config.json`
 
-### Custom Commands
-Supports:
-- `url`
-- `folder`
-- `command`
-- `terminal-in-folder`
+### ⭐ Favorite Websites (`FavoriteWebsitesPage`)
+- Quick-access bookmarks for frequently visited sites
+- Opens URLs in default browser
+- Configurable via `config.json`
 
-### Configuration
-- Open config folder
-- Open config file
-- Open config file in editor
-- Open debug log
-- Reload config
-- Reset config to defaults
+### ⚡ Custom Commands (`CustomCommandsPage`)
+Execute user-defined commands with support for:
+- **`url`**: Open web addresses
+- **`folder`**: Open directories in Explorer
+- **`command`**: Run executables with arguments
+- **`terminal-in-folder`**: Launch terminal in specific directory
+
+### ⚙️ Configuration (`ConfigPage`)
+Comprehensive configuration management:
+- **View Settings**: Current repo root, editor, terminal commands
+- **Open Config Folder**: Navigate to config directory
+- **Open Config File**: Edit with default application
+- **Open Config in Editor**: Edit with configured editor
+- **Open Debug Log**: View configuration and error logs
+- **Reload Config**: Apply changes without restarting
+- **Reset to Defaults**: Restore default configuration
+
+## Security Notes
+
+- **No Credentials Stored**: Configuration files do not contain passwords or sensitive data
+- **Windows Packaged Storage**: Config stored in isolated app storage
+- **Process Execution**: Uses `UseShellExecute = true` for safe process launching
+- **Path Validation**: Validates directories and executables before execution
+
+## Troubleshooting
+
+### Extension Not Appearing
+1. Ensure PowerToys is running and Command Palette is enabled
+2. Press `Win+Alt+Space` → Type `reload` → Select "Reload extensions"
+3. Check if extension is deployed: Look for deployment success in VS Output window
+
+### Build Errors
+- **NETSDK1097**: Project includes `RuntimeIdentifier` fix for single-file publish
+- Missing dependencies: Ensure NuGet packages are restored
+
+### Configuration Issues
+1. Navigate to Configuration page to view exact config file location
+2. Check `debug.log` in config folder for error details
+3. Use "Reset Config to Defaults" to resolve corrupted config
+4. Ensure JSON syntax is valid when manually editing
+
+### Commands Not Working
+- Verify `code`, `wt`, `powershell.exe` are in your system PATH
+- Check custom command targets are valid executables
+- Review debug log for execution errors
+
+For additional issues, check the `debug.log` file in the config directory (path shown in Configuration page).
+
+## Contributing & Workflow
+
+Contributions are welcome! To contribute:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+3. **Make your changes** with clear, focused commits
+4. **Test thoroughly**: Build, deploy, and test in Command Palette
+5. **Submit a pull request** with a description of changes
+
+### Development Guidelines
+
+- Follow existing code patterns and structure
+- Keep features modular (one page per feature)
+- Update `CHANGELOG.md` with changes
+- Test configuration loading and error handling
+- Ensure AOT compatibility (source-generated JSON)
+
+See `CHANGELOG.md` for recent changes and version history.
+
+## Technology Stack
+
+- **.NET 9** (Windows App SDK)
+- **C# 12** with nullable reference types
+- **Command Palette Extensions API** (Microsoft.CommandPalette.Extensions)
+- **WinRT COM Server** (out-of-process communication)
+- **MSIX Packaging** (Windows Store distribution)
+- **Source-Generated JSON** (AOT-compatible serialization)
+
+## Roadmap
+
+Planned enhancements:
+
+- [ ] Icon customization per page/command
+- [ ] Git integration (status, branches, operations)
+- [ ] Search and filtering for large repository lists
+- [ ] Recent items tracking
+- [ ] Theme support
+- [ ] Keyboard shortcuts configuration
+- [ ] Export/import configuration profiles
+- [ ] Cloud sync for configuration
+
+## License
+
+[Specify your license here - e.g., MIT, Apache 2.0]
+
+## Acknowledgments
+
+Built for [Microsoft PowerToys Command Palette](https://learn.microsoft.com/windows/powertoys/command-palette/overview)
+
+---
+
+**Made with ❤️ for developers by developers**
 
 ## Configuration
 
-Dev Launchpad automatically creates a `config.json` file in packaged app storage.
+Dev Launchpad automatically creates a `config.json` file in Windows packaged app storage:
 
-The Configuration page inside the extension shows the exact file location being used.
+**Location**: `%LOCALAPPDATA%\Packages\DevLaunchpad_<publisher-id>\LocalCache\DevLaunchpad\config.json`
 
-Example config:
+You can find the exact path by navigating to **Configuration** in the extension.
+
+### Configuration Options
 
 ```json
 {
-  "RepoRoot": "C:\\Projects",
-  "EditorCommand": "code",
-  "TerminalCommand": "wt",
-  "LocalUrls": [
+  "RepoRoot": "C:\\Projects",           // Root folder to scan for Git repositories
+  "EditorCommand": "code",               // Command to launch your editor (e.g., "code", "notepad++")
+  "TerminalCommand": "wt",               // Terminal command (e.g., "wt", "powershell")
+
+  "LocalUrls": [                         // Development server URLs
     {
       "Title": "Frontend",
       "Url": "http://localhost:5173"
+    },
+    {
+      "Title": "Backend API",
+      "Url": "http://localhost:8000"
+    },
+    {
+      "Title": "React App",
+      "Url": "http://localhost:3000"
     }
   ],
-  "FavoriteWebsites": [
+
+  "FavoriteWebsites": [                  // Quick-access bookmarks
     {
       "Title": "GitHub",
       "Url": "https://github.com"
+    },
+    {
+      "Title": "ChatGPT",
+      "Url": "https://chatgpt.com"
     }
   ],
-  "CustomCommands": [
+
+  "CustomCommands": [                    // User-defined commands
     {
       "Title": "Open PowerShell",
-      "Type": "command",
+      "Type": "command",                 // Types: url, folder, command, terminal-in-folder
       "Target": "powershell.exe",
       "Arguments": ""
     },
@@ -85,12 +277,45 @@ Example config:
       "Type": "folder",
       "Target": "C:\\Projects",
       "Arguments": ""
+    },
+    {
+      "Title": "Terminal in Projects",
+      "Type": "terminal-in-folder",
+      "Target": "C:\\Projects",
+      "Arguments": ""
     }
   ]
 }
+```
 
-## Design References
+### Custom Command Types
 
-Issue-specific screenshots and UI reference assets can be stored under:
+- **`url`**: Opens URLs in the default browser
+- **`folder`**: Opens folders in Windows Explorer
+- **`command`**: Executes programs/scripts with optional arguments
+- **`terminal-in-folder`**: Opens your configured terminal in a specific directory
 
-- `docs/images/`
+### Editing Configuration
+
+1. **Via Extension**:
+   - Open Dev Launchpad → Configuration
+   - Select "Open Config File in Editor"
+
+2. **Manual Edit**:
+   - Navigate to config folder (shown in Configuration page)
+   - Edit `config.json` with your preferred editor
+   - Use "Reload Config" to apply changes
+
+3. **Reset to Defaults**:
+   - Configuration → "Reset Config to Defaults"
+
+## Screenshots
+
+[Add screenshots here showing the extension in action]
+
+- Main menu
+- Repository browser
+- Configuration page
+- Custom commands in action
+
+Screenshots and design assets are stored in `docs/images/`.
