@@ -33,8 +33,11 @@ jobs:
               }
             );
 
-            const workflowRef = process.env.GITHUB_WORKFLOW_REF || '';
-            const workflowPath = workflowRef ? workflowRef.split('@')[0].split('/').slice(2).join('/') : '';
+            const workflowRefPath = (process.env.GITHUB_WORKFLOW_REF || '').split('@')[0];
+            const workflowPrefix = `${context.repo.owner}/${context.repo.repo}/`;
+            const workflowPath = workflowRefPath.startsWith(workflowPrefix)
+              ? workflowRefPath.slice(workflowPrefix.length)
+              : '';
 
             const readmeTouched = files.some(file => file.filename === 'README.md');
 
@@ -63,7 +66,7 @@ jobs:
 
             if (codeTouched && !readmeTouched) {
               core.setFailed(
-                'Code/workflow changes were detected without updating README.md. Update README.md when behavior/setup/workflow docs should change, or explain in the PR why no README update is needed.'
+                'Code/workflow changes were detected without updating README.md. This check requires a README.md update for qualifying changes.'
               );
               return;
             }
