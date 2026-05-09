@@ -41,7 +41,18 @@ jobs:
                 return false;
               }
 
-              return !path.toLowerCase().endsWith('.md');
+              if (path.startsWith('.github/workflows/')) {
+                return true;
+              }
+
+              return (
+                path.endsWith('.cs') ||
+                path.endsWith('.csproj') ||
+                path.endsWith('.sln') ||
+                path.endsWith('.props') ||
+                path.endsWith('.targets') ||
+                path.endsWith('.appxmanifest')
+              );
             });
 
             if (codeTouched && !readmeTouched) {
