@@ -187,6 +187,11 @@ publish/
 *.pubxml
 *.publishproj
 
+# Dev Launchpad: the single-project MSIX packaging targets require these publish
+# profiles (referenced from the .csproj), so they must be checked in.
+!DevLaunchpad/Properties/PublishProfiles/win-x64.pubxml
+!DevLaunchpad/Properties/PublishProfiles/win-arm64.pubxml
+
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
 # checkin your Azure Web App publish settings, but sensitive information contained
 # in these scripts will be unencrypted
