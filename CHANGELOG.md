@@ -20,10 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Centralized, exception-safe process launching (`ProcessLauncher`) that surfaces failures as
   toasts instead of crashing the extension
 - Automatic migration of existing configuration from the legacy `LocalCacheFolder` location
+- In-palette **Settings** form (toolkit `Settings`) to edit the repo root, editor command, and
+  terminal command without hand-editing JSON; advertised to the Command Palette host via
+  `CommandProvider.Settings` and exposed as a top-level "Settings" command. Edits are written
+  straight back to `config.json` (single source of truth).
+- Live search on the **Repositories** page via `DynamicListPage` — repos filter as you type by
+  name or path
 
 ### Changed
 - Configuration and debug log now stored in the persistent `LocalFolder` instead of the
   purgeable `LocalCacheFolder`
+- Repository scan is now bounded (max depth) and skips heavy directories (`node_modules`, `bin`,
+  `obj`, etc.) and caches results per page open, so opening Repositories no longer triggers an
+  unbounded recursive walk on every keystroke
 - "Developer Apps" now launches the configured editor/terminal commands
 - Terminal launches now set the working directory correctly for non–Windows-Terminal shells
 - Reconciled licensing on GNU GPL v3.0 (source headers, README, LICENSE)

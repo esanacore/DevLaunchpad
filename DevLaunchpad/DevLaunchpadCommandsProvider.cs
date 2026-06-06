@@ -18,6 +18,11 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
     private readonly CommandItem[] _commands;
 
     /// <summary>
+    /// Backing settings model. Seeded from and saved back to config.json.
+    /// </summary>
+    private readonly DevLaunchpadSettings _settings = new();
+
+    /// <summary>
     /// Initializes a new instance of the DevLaunchpadCommandsProvider.
     /// 
     /// Sets up the extension display name, icon, and defines all available commands and pages.
@@ -26,6 +31,9 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
     {
         DisplayName = "Dev Launchpad";
         Icon = IconHelpers.FromRelativePath("Assets\\StoreLogo.png");
+
+        // Advertise the in-palette settings form to the Command Palette host.
+        Settings = _settings.Settings;
 
         _commands =
         [
@@ -76,6 +84,15 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
             )
             {
                 Command = new ConfigPage()
+            },
+
+            new CommandItem(
+                title: "Settings",
+                subtitle: "Edit repo root, editor, and terminal in Command Palette"
+            )
+            {
+                Command = _settings.Settings.SettingsPage,
+                Icon = new IconInfo("\uE713")
             }
         ];
     }

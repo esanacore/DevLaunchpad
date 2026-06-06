@@ -231,6 +231,17 @@ Dev Launchpad automatically creates a `config.json` file in Windows packaged app
 
 You can find the exact path by navigating to **Configuration** in the extension.
 
+### Editing settings in Command Palette
+
+You don't have to hand-edit JSON for the common options. Open the **Settings** command (or the
+gear in the Command Palette extension manager) to edit the **repository root**, **editor command**,
+and **terminal command** directly in-palette. Changes are saved straight back to `config.json`, so
+the form and the file always agree. The list-based options (local servers, favorite websites,
+custom commands) are still edited in `config.json`.
+
+> **Tip:** The **Repositories** page supports live search — start typing to filter discovered
+> repos by name or path.
+
 ### Configuration Options
 
 ```json

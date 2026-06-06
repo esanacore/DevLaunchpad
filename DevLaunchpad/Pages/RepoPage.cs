@@ -1,91 +1,139 @@
-﻿using Microsoft.CommandPalette.Extensions;
+using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace DevLaunchpad.Pages;
 
-public sealed partial class RepoPage : ListPage
+public sealed partial class RepoPage : DynamicListPage
 {
+    // Bound the recursive scan so a deep or pathological tree can't hang the extension.
+    private const int MaxScanDepth = 6;
+
+    // Directories that never contain a repo root worth surfacing and are expensive to walk.
+    private static readonly HashSet<string> SkipDirectories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "node_modules", "bin", "obj", ".vs", ".idea", ".vscode",
+        "packages", "dist", "build", "out", "target", "vendor", "__pycache__",
+    };
+
+    private readonly object _cacheLock = new();
+    private List<RepoEntry>? _cache;
+    private string _cachedRoot = string.Empty;
+
     public RepoPage()
     {
         Title = "Repositories";
         Name = "repos";
+        PlaceholderText = "Search repositories...";
+    }
+
+    public override void UpdateSearchText(string oldSearch, string newSearch)
+    {
+        // Items are filtered in-memory from the cached scan, so just re-raise.
+        RaiseItemsChanged(0);
     }
 
     public override IListItem[] GetItems()
     {
-        var items = new List<IListItem>();
-
         var config = DevLaunchpadConfig.Load();
         string repoRoot = config.RepoRoot;
 
         if (string.IsNullOrWhiteSpace(repoRoot) || !Directory.Exists(repoRoot))
         {
-            items.Add(new ListItem(new NoOpCommand())
-            {
-                Title = "Projects folder not found",
-                Subtitle = repoRoot
-            });
-
-            return items.ToArray();
+            return
+            [
+                new ListItem(new NoOpCommand())
+                {
+                    Title = "Projects folder not found",
+                    Subtitle = string.IsNullOrWhiteSpace(repoRoot) ? "(repo root not configured)" : repoRoot,
+                },
+            ];
         }
 
-        var repoDirectories = FindGitRepos(repoRoot);
+        var repos = GetRepos(repoRoot);
 
-        foreach (var directory in repoDirectories.OrderBy(path => path))
+        string query = SearchText;
+        IEnumerable<RepoEntry> matches = repos;
+        if (!string.IsNullOrWhiteSpace(query))
         {
-            string displayName = Path.GetRelativePath(repoRoot, directory);
-
-            items.Add(new ListItem(new RepoActionsPage(displayName, directory))
-            {
-                Title = displayName,
-                Subtitle = directory
-            });
+            matches = repos.Where(r =>
+                r.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                r.FullPath.Contains(query, StringComparison.OrdinalIgnoreCase));
         }
+
+        var items = matches
+            .OrderBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(r => (IListItem)new ListItem(new RepoActionsPage(r.DisplayName, r.FullPath))
+            {
+                Title = r.DisplayName,
+                Subtitle = r.FullPath,
+            })
+            .ToList();
 
         if (items.Count == 0)
         {
             items.Add(new ListItem(new NoOpCommand())
             {
-                Title = "No git repositories found",
-                Subtitle = repoRoot
+                Title = string.IsNullOrWhiteSpace(query) ? "No git repositories found" : "No matching repositories",
+                Subtitle = repoRoot,
             });
         }
 
         return items.ToArray();
     }
 
-    private static List<string> FindGitRepos(string rootPath)
+    private List<RepoEntry> GetRepos(string repoRoot)
     {
-        var results = new List<string>();
-
-        try
+        lock (_cacheLock)
         {
-            ScanDirectory(rootPath, results);
-        }
-        catch
-        {
-            // Keep the extension resilient if anything unexpected happens.
-        }
+            if (_cache != null && string.Equals(_cachedRoot, repoRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                return _cache;
+            }
 
-        return results;
+            var discovered = new List<RepoEntry>();
+            try
+            {
+                ScanDirectory(repoRoot, discovered, repoRoot, 0);
+            }
+            catch
+            {
+                // Keep the extension resilient if anything unexpected happens.
+            }
+
+            _cache = discovered;
+            _cachedRoot = repoRoot;
+            return discovered;
+        }
     }
 
-    private static void ScanDirectory(string currentPath, List<string> results)
+    private static void ScanDirectory(string currentPath, List<RepoEntry> results, string repoRoot, int depth)
     {
         try
         {
             if (Directory.Exists(Path.Combine(currentPath, ".git")))
             {
-                results.Add(currentPath);
+                results.Add(new RepoEntry(Path.GetRelativePath(repoRoot, currentPath), currentPath));
+                return;
+            }
+
+            if (depth >= MaxScanDepth)
+            {
                 return;
             }
 
             foreach (var subdirectory in Directory.GetDirectories(currentPath))
             {
-                ScanDirectory(subdirectory, results);
+                string name = Path.GetFileName(subdirectory);
+                if (SkipDirectories.Contains(name))
+                {
+                    continue;
+                }
+
+                ScanDirectory(subdirectory, results, repoRoot, depth + 1);
             }
         }
         catch
@@ -93,6 +141,8 @@ public sealed partial class RepoPage : ListPage
             // Ignore folders we cannot access.
         }
     }
+
+    private readonly record struct RepoEntry(string DisplayName, string FullPath);
 
     private sealed partial class NoOpCommand : InvokableCommand
     {

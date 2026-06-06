@@ -85,6 +85,34 @@ public sealed class DevLaunchpadConfig
         }
     }
 
+    /// <summary>
+    /// Persists this configuration instance to config.json. Used by the in-palette
+    /// Settings UI so edits flow back into the single source of truth on disk.
+    /// </summary>
+    public void Save()
+    {
+        try
+        {
+            EnsureConfigDirectoryExists();
+
+            string json = JsonSerializer.Serialize(
+                this,
+                DevLaunchpadJsonContext.Default.DevLaunchpadConfig);
+
+            File.WriteAllText(
+                GetConfigPath(),
+                json,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+            WriteDebugLog("Config saved.");
+        }
+        catch (Exception ex)
+        {
+            WriteDebugLog($"Save failed: {ex}");
+            throw;
+        }
+    }
+
     public static string GetConfigDirectory()
     {
         // LocalFolder persists for the lifetime of the install. LocalCacheFolder (used by earlier
