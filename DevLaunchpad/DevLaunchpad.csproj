@@ -92,31 +92,4 @@
     <!-- In release, also ignore the aforementioned ILLink warning -->
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="README.md" />
-    <None Remove="CHANGELOG.md" />
-    <None Remove="CONTRIBUTING.md" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="README.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CHANGELOG.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CONTRIBUTING.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="docs\ARCHITECTURE.md" />
-    <Content Include="docs\DOCUMENTATION_SUMMARY.md" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="docs\*.png" />
-  </ItemGroup>
 </Project>
