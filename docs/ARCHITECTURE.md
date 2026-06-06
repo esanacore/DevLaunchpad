@@ -129,14 +129,14 @@ Each page inherits from `ListPage` and implements specific features:
 
 **Features**:
 - **Auto-creation**: Creates default config on first run
-- **Windows Storage**: Uses `ApplicationData.Current.LocalCacheFolder`
+- **Windows Storage**: Uses `ApplicationData.Current.LocalFolder` (persistent; legacy `LocalCacheFolder` configs are migrated automatically)
 - **Validation**: Ensures config integrity
 - **Debug Logging**: Tracks load/save operations
 - **Hot Reload**: Supports runtime config changes
 
 **Storage Path**:
 ```
-%LOCALAPPDATA%\Packages\DevLaunchpad_<publisherId>\LocalCache\DevLaunchpad\
+%LOCALAPPDATA%\Packages\DevLaunchpad_<publisherId>\LocalState\DevLaunchpad\
 ├── config.json       # User configuration
 └── debug.log         # Debug and error log
 ```

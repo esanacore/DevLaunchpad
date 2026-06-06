@@ -227,7 +227,7 @@ Built for [Microsoft PowerToys Command Palette](https://learn.microsoft.com/wind
 
 Dev Launchpad automatically creates a `config.json` file in Windows packaged app storage:
 
-**Location**: `%LOCALAPPDATA%\Packages\DevLaunchpad_<publisher-id>\LocalCache\DevLaunchpad\config.json`
+**Location**: `%LOCALAPPDATA%\Packages\DevLaunchpad_<publisher-id>\LocalState\DevLaunchpad\config.json`
 
 You can find the exact path by navigating to **Configuration** in the extension.
 
