@@ -115,8 +115,7 @@ Each page inherits from `ListPage` and implements specific features:
 
 | Page | Purpose | Key Features |
 |------|---------|--------------|
-| `RepoPage` | Browse Git repos | Recursive .git detection, relative paths |
-| `RepoActionsPage` | Repo actions | Open folder/editor/terminal |
+| `RepoPage` | Browse Git repos | Live search (`DynamicListPage`), bounded scan, current branch, pins/recents, per-item context menu (open/copy/remote/pin) |
 | `DevToolsPage` | Quick launch tools | Configurable tool shortcuts |
 | `LocalServersPage` | Local URLs | Configurable localhost links |
 | `FavoriteWebsitesPage` | Website bookmarks | Quick URL access |
@@ -193,8 +192,8 @@ User opens Command Palette (Win+Alt+Space)
     │           ├─> Finds Git repositories
     │           └─> Returns list of CommandItems
     │
-    └─> User selects repository → RepoActionsPage shown
-        └─> User selects action → Process.Start() executed
+    └─> User selects repository → Open in Editor (default), or context menu
+        └─> open folder/terminal, copy path, open remote, pin/unpin
 ```
 
 ## Extension Lifecycle

@@ -13,8 +13,7 @@ DevLaunchpad/
 │   ├── DevLaunchpadConfig.cs       # Configuration management
 │   ├── DevLaunchpadJsonContext.cs  # JSON serialization (AOT-compatible)
 │   ├── Pages/                      # Feature implementations
-│   │   ├── RepoPage.cs            # Git repository browser
-│   │   ├── RepoActionsPage.cs     # Repository actions (open/edit/terminal)
+│   │   ├── RepoPage.cs            # Git repository browser (live search, branch, pins, context menu)
 │   │   ├── DevToolsPage.cs        # Developer tools launcher
 │   │   ├── LocalServersPage.cs    # Local URL management
 │   │   ├── FavoriteWebsitesPage.cs # Website bookmarks

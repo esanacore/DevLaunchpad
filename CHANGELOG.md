@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   straight back to `config.json` (single source of truth).
 - Live search on the **Repositories** page via `DynamicListPage` — repos filter as you type by
   name or path
+- Repository intelligence: each repo now shows its **current Git branch** (read directly from
+  `.git/HEAD`, no process spawned) and a per-item **context menu** (open folder/terminal, copy
+  path, open the origin remote in a browser, pin/unpin)
+- **Pinned** and **recently opened** repositories are remembered (in `config.json`) and floated to
+  the top of the list
 
 ### Changed
 - Configuration and debug log now stored in the persistent `LocalFolder` instead of the
