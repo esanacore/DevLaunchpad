@@ -17,16 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration management system
 - JSON-based configuration with auto-creation
 - Debug logging system
+- Centralized, exception-safe process launching (`ProcessLauncher`) that surfaces failures as
+  toasts instead of crashing the extension
+- Automatic migration of existing configuration from the legacy `LocalCacheFolder` location
 
 ### Changed
-- N/A
+- Configuration and debug log now stored in the persistent `LocalFolder` instead of the
+  purgeable `LocalCacheFolder`
+- "Developer Apps" now launches the configured editor/terminal commands
+- Terminal launches now set the working directory correctly for non–Windows-Terminal shells
+- Reconciled licensing on GNU GPL v3.0 (source headers, README, LICENSE)
 
 ### Fixed
 - Fixed NETSDK1097 build error by adding RuntimeIdentifier
 - Fixed missing functionality exposure in CommandsProvider
+- Guarded all `Process.Start` calls so a missing editor/terminal/target no longer throws out of
+  the COM server
+- Removed dead template page (`DevLaunchpadPage`) that shipped a "TODO" placeholder item
+- Repaired CI: removed the placeholder `.NET Core Desktop` workflow and fixed the build workflow
+  (correct platform, removed nonexistent test step)
 
 ### Security
-- Configuration stored in Windows packaged app storage (LocalCacheFolder)
+- Configuration stored in Windows packaged app storage (LocalFolder)
 - No credentials stored in configuration files
 
 ## [0.0.1.0] - 2025-01-XX

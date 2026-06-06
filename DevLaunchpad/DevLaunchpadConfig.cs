@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using Microsoft.CommandPalette.Extensions.Toolkit;
 using Windows.Storage;
 
 namespace DevLaunchpad;
@@ -50,6 +51,7 @@ public sealed class DevLaunchpadConfig
         try
         {
             EnsureConfigDirectoryExists();
+            MigrateLegacyConfigIfNeeded();
             EnsureDefaultConfigExists(configPath);
 
             string json = File.ReadAllText(configPath, Encoding.UTF8);
@@ -85,7 +87,51 @@ public sealed class DevLaunchpadConfig
 
     public static string GetConfigDirectory()
     {
+        // LocalFolder persists for the lifetime of the install. LocalCacheFolder (used by earlier
+        // versions) can be purged by Windows/Storage Sense, which would silently lose user settings.
+        return Path.Combine(ApplicationData.Current.LocalFolder.Path, "DevLaunchpad");
+    }
+
+    private static string GetLegacyConfigDirectory()
+    {
         return Path.Combine(ApplicationData.Current.LocalCacheFolder.Path, "DevLaunchpad");
+    }
+
+    /// <summary>
+    /// One-time migration of an existing config from the old LocalCacheFolder location to the
+    /// persistent LocalFolder location. No-op once a config exists in the new location.
+    /// </summary>
+    private static void MigrateLegacyConfigIfNeeded()
+    {
+        try
+        {
+            string newConfigPath = GetConfigPath();
+            if (File.Exists(newConfigPath))
+            {
+                return;
+            }
+
+            string legacyConfigPath = Path.Combine(GetLegacyConfigDirectory(), "config.json");
+            if (!File.Exists(legacyConfigPath))
+            {
+                return;
+            }
+
+            EnsureConfigDirectoryExists();
+            File.Copy(legacyConfigPath, newConfigPath, overwrite: false);
+
+            string legacyLog = Path.Combine(GetLegacyConfigDirectory(), "debug.log");
+            if (File.Exists(legacyLog) && !File.Exists(GetDebugLogPath()))
+            {
+                File.Copy(legacyLog, GetDebugLogPath(), overwrite: false);
+            }
+
+            WriteDebugLog($"Migrated config from legacy location: {legacyConfigPath}");
+        }
+        catch (Exception ex)
+        {
+            WriteDebugLog($"Legacy config migration skipped: {ex.Message}");
+        }
     }
 
     public static string GetConfigPath()
@@ -100,7 +146,7 @@ public sealed class DevLaunchpadConfig
 
     public static string GetStorageDescription()
     {
-        return "Using packaged app storage (LocalCacheFolder)";
+        return "Using packaged app storage (LocalFolder)";
     }
 
     public static void EnsureConfigDirectoryExists()
@@ -154,18 +200,21 @@ public sealed class DevLaunchpadConfig
         }
     }
 
-    public static void ResetToDefaults()
+    public static CommandResult ResetToDefaults()
     {
         string configPath = GetConfigPath();
         WriteDefaultConfig(configPath);
         WriteDebugLog("Config reset to defaults.");
+        return CommandResult.ShowToast("Configuration reset to defaults.");
     }
-    public static void ReloadConfig()
+
+    public static CommandResult ReloadConfig()
     {
         string configPath = GetConfigPath();
         EnsureDefaultConfigExists(configPath);
         _ = Load();
         WriteDebugLog("Config reloaded.");
+        return CommandResult.ShowToast("Configuration reloaded from disk.");
     }
 
     private static string GetDefaultConfigJson()
@@ -229,43 +278,31 @@ public sealed class DevLaunchpadConfig
 """;
     }
 
-    public static void OpenConfigFolder()
+    public static CommandResult OpenConfigFolder()
     {
         EnsureConfigDirectoryExists();
-
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "explorer.exe",
-            Arguments = GetConfigDirectory(),
-            UseShellExecute = true
-        });
+        return ProcessLauncher.OpenFolder(GetConfigDirectory());
     }
 
-    public static void OpenConfigFile()
+    public static CommandResult OpenConfigFile()
     {
         string configPath = GetConfigPath();
         EnsureDefaultConfigExists(configPath);
 
-        Process.Start(new ProcessStartInfo
+        return ProcessLauncher.Start(new ProcessStartInfo
         {
             FileName = configPath,
             UseShellExecute = true
         });
     }
 
-    public static void OpenConfigFileInEditor()
+    public static CommandResult OpenConfigFileInEditor()
     {
-        var config = Load();
-
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = config.EditorCommand,
-            Arguments = $"\"{GetConfigPath()}\"",
-            UseShellExecute = true
-        });
+        EnsureDefaultConfigExists(GetConfigPath());
+        return ProcessLauncher.OpenInEditor(GetConfigPath());
     }
 
-    public static void OpenDebugLog()
+    public static CommandResult OpenDebugLog()
     {
         EnsureConfigDirectoryExists();
 
@@ -274,7 +311,7 @@ public sealed class DevLaunchpadConfig
             File.WriteAllText(GetDebugLogPath(), "Debug log created." + Environment.NewLine);
         }
 
-        Process.Start(new ProcessStartInfo
+        return ProcessLauncher.Start(new ProcessStartInfo
         {
             FileName = GetDebugLogPath(),
             UseShellExecute = true

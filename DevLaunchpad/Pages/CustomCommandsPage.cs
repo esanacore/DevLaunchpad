@@ -1,7 +1,6 @@
 ﻿using Microsoft.CommandPalette.Extensions;
 using Microsoft.CommandPalette.Extensions.Toolkit;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace DevLaunchpad.Pages;
 
@@ -43,7 +42,7 @@ public sealed partial class CustomCommandsPage : ListPage
             switch (type)
             {
                 case "url":
-                    items.Add(new ListItem(new OpenUrlCommand(entry.Target))
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.OpenUrl(entry.Target)))
                     {
                         Title = entry.Title,
                         Subtitle = entry.Target
@@ -51,7 +50,7 @@ public sealed partial class CustomCommandsPage : ListPage
                     break;
 
                 case "folder":
-                    items.Add(new ListItem(new AnonymousCommand(() => OpenFolder(entry.Target)))
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.OpenFolder(entry.Target)))
                     {
                         Title = entry.Title,
                         Subtitle = entry.Target
@@ -59,7 +58,7 @@ public sealed partial class CustomCommandsPage : ListPage
                     break;
 
                 case "command":
-                    items.Add(new ListItem(new AnonymousCommand(() => RunCommand(entry.Target, entry.Arguments)))
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.RunCommand(entry.Target, entry.Arguments)))
                     {
                         Title = entry.Title,
                         Subtitle = BuildSubtitle(entry.Target, entry.Arguments)
@@ -67,7 +66,7 @@ public sealed partial class CustomCommandsPage : ListPage
                     break;
 
                 case "terminal-in-folder":
-                    items.Add(new ListItem(new AnonymousCommand(() => OpenTerminalInFolder(entry.Target)))
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.OpenInTerminal(entry.Target)))
                     {
                         Title = entry.Title,
                         Subtitle = entry.Target
@@ -93,44 +92,6 @@ public sealed partial class CustomCommandsPage : ListPage
         return string.IsNullOrWhiteSpace(arguments)
             ? target
             : $"{target} {arguments}";
-    }
-
-    private static void OpenFolder(string path)
-    {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "explorer.exe",
-            Arguments = path,
-            UseShellExecute = true
-        });
-    }
-
-    private static void RunCommand(string target, string arguments)
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = target,
-            UseShellExecute = true
-        };
-
-        if (!string.IsNullOrWhiteSpace(arguments))
-        {
-            startInfo.Arguments = arguments;
-        }
-
-        Process.Start(startInfo);
-    }
-
-    private static void OpenTerminalInFolder(string path)
-    {
-        var config = DevLaunchpadConfig.Load();
-
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = config.TerminalCommand,
-            Arguments = $"-d \"{path}\"",
-            UseShellExecute = true
-        });
     }
 
     private sealed partial class NoOpCommand : InvokableCommand
