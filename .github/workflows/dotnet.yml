@@ -27,7 +27,9 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Restore dependencies
-      run: dotnet restore DevLaunchpad/DevLaunchpad.csproj -p:Platform=x64
+      run: dotnet restore DevLaunchpad/DevLaunchpad.csproj -p:Platform=x64 -r win-x64
 
     - name: Build
-      run: dotnet build DevLaunchpad/DevLaunchpad.csproj --no-restore -c ${{ matrix.configuration }} -p:Platform=x64
+      # Release enables trimming (PublishTrimmed), which requires a self-contained,
+      # RID-specific build, so build self-contained for win-x64.
+      run: dotnet build DevLaunchpad/DevLaunchpad.csproj --no-restore -c ${{ matrix.configuration }} -p:Platform=x64 -r win-x64 --self-contained
