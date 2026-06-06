@@ -31,8 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path, open the origin remote in a browser, pin/unpin)
 - **Pinned** and **recently opened** repositories are remembered (in `config.json`) and floated to
   the top of the list
+- Microsoft Store packaging: a `MSIX` CI workflow that builds unsigned **x64** and **arm64**
+  `.msix` packages and uploads them as artifacts, the `win-x64`/`win-arm64` publish profiles the
+  packaging targets require, plus `docs/STORE.md` (submission checklist) and `docs/PRIVACY.md`
+  (privacy policy required by the Store)
 
 ### Changed
+- Package manifest cleaned up for Store submission: real publisher identity placeholders
+  (`Eric Sanacore` instead of `Microsoft Corporation` / `A Lone Developer`), a descriptive
+  tile description, version bumped to `1.0.0.0`, and `MaxVersionTested` raised to `10.0.22621.0`
+- Dropped the unused `internetClient` capability (the extension makes no network calls of its own)
 - Configuration and debug log now stored in the persistent `LocalFolder` instead of the
   purgeable `LocalCacheFolder`
 - Repository scan is now bounded (max depth) and skips heavy directories (`node_modules`, `bin`,

@@ -1,0 +1,57 @@
+# Builds the Dev Launchpad MSIX packages for x64 and arm64 and uploads them as
+# artifacts. The packages are intentionally left UNSIGNED: the Microsoft Store
+# re-signs submissions with the publisher certificate, so a signing cert is not
+# needed here. For local sideloading you must sign the .msix with your own cert.
+#
+# Single-project MSIX only produces one .msix per platform (no bundle), so we run
+# one matrix leg per architecture.
+
+name: MSIX
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ x64, arm64 ]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore
+      run: msbuild DevLaunchpad/DevLaunchpad.csproj /t:Restore /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+
+    - name: Build MSIX package
+      run: >
+        msbuild DevLaunchpad/DevLaunchpad.csproj
+        /p:Configuration=Release
+        /p:Platform=${{ matrix.platform }}
+        /p:GenerateAppxPackageOnBuild=true
+        /p:UapAppxPackageBuildMode=SideloadOnly
+        /p:AppxBundle=Never
+        /p:AppxPackageSigningEnabled=false
+        /p:AppxPackageDir=${{ github.workspace }}\AppPackages\
+
+    - name: Upload MSIX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DevLaunchpad-${{ matrix.platform }}-msix
+        path: ${{ github.workspace }}\AppPackages\**\*.msix
+        if-no-files-found: error

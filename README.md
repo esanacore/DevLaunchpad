@@ -71,9 +71,17 @@ DevLaunchpad/
    - Type `reload`
    - Select "Reload extensions"
 
-#### Option 2: From Microsoft Store (Coming Soon)
+#### Option 2: Prebuilt MSIX
 
-Once published, install directly from the Microsoft Store.
+Every push and PR builds unsigned **x64** and **arm64** `.msix` packages via the
+[`MSIX`](.github/workflows/msix.yml) workflow; download them from the run's **Artifacts**.
+To sideload, sign the `.msix` with a certificate you trust, then `Add-AppxPackage` it.
+
+#### Option 3: From Microsoft Store (Coming Soon)
+
+Once published, install directly from the Microsoft Store. See
+[`docs/STORE.md`](docs/STORE.md) for the submission process and
+[`docs/PRIVACY.md`](docs/PRIVACY.md) for the privacy policy.
 
 ### First Launch
 
