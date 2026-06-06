@@ -14,33 +14,32 @@ public sealed partial class DevToolsPage : ListPage
 
     public override IListItem[] GetItems()
     {
+        var config = DevLaunchpadConfig.Load();
+
         return
         [
-            new ListItem(new AnonymousCommand(() =>
+            new ListItem(new SafeInvokableCommand(
+                "Open Editor",
+                () => ProcessLauncher.Start(new ProcessStartInfo { FileName = config.EditorCommand, UseShellExecute = true })))
             {
-                Process.Start("code");
-            }))
-            {
-                Title = "Open VS Code",
-                Subtitle = "Launch Visual Studio Code"
+                Title = "Open Editor",
+                Subtitle = $"Launch {config.EditorCommand}"
             },
 
-            new ListItem(new AnonymousCommand(() =>
-            {
-                Process.Start("powershell.exe");
-            }))
+            new ListItem(new SafeInvokableCommand(
+                "Open PowerShell",
+                () => ProcessLauncher.Start(new ProcessStartInfo { FileName = "powershell.exe", UseShellExecute = true })))
             {
                 Title = "Open PowerShell",
                 Subtitle = "Launch Windows PowerShell"
             },
 
-            new ListItem(new AnonymousCommand(() =>
+            new ListItem(new SafeInvokableCommand(
+                "Open Terminal",
+                () => ProcessLauncher.Start(new ProcessStartInfo { FileName = config.TerminalCommand, UseShellExecute = true })))
             {
-                Process.Start("wt");
-            }))
-            {
-                Title = "Open Windows Terminal",
-                Subtitle = "Launch Windows Terminal"
+                Title = "Open Terminal",
+                Subtitle = $"Launch {config.TerminalCommand}"
             }
         ];
     }

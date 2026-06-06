@@ -1,5 +1,5 @@
-// Copyright (c) Microsoft Corporation
-// The Microsoft Corporation licenses this file to you under the MIT license.
+// Copyright (c) Eric Sanacore
+// SPDX-License-Identifier: GPL-3.0-only
 // See the LICENSE file in the project root for more information.
 
 using System;

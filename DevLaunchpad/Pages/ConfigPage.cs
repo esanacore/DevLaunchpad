@@ -57,37 +57,37 @@ public sealed partial class ConfigPage : ListPage
                 Subtitle = debugLogPath
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.OpenConfigFolder()))
+            new ListItem(new SafeInvokableCommand("Open Config Folder", DevLaunchpadConfig.OpenConfigFolder))
             {
                 Title = "Open Config Folder",
                 Subtitle = configDir
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.OpenConfigFile()))
+            new ListItem(new SafeInvokableCommand("Open Config File", DevLaunchpadConfig.OpenConfigFile))
             {
                 Title = "Open Config File",
                 Subtitle = "Open config.json with the default app"
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.OpenConfigFileInEditor()))
+            new ListItem(new SafeInvokableCommand("Open Config File in Editor", DevLaunchpadConfig.OpenConfigFileInEditor))
             {
                 Title = "Open Config File in Editor",
                 Subtitle = "Edit config.json using your configured editor"
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.OpenDebugLog()))
+            new ListItem(new SafeInvokableCommand("Open Debug Log", DevLaunchpadConfig.OpenDebugLog))
             {
                 Title = "Open Debug Log",
                 Subtitle = "Inspect config creation and load issues"
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.ReloadConfig()))
+            new ListItem(new SafeInvokableCommand("Reload Config", DevLaunchpadConfig.ReloadConfig))
             {
                 Title = "Reload Config",
                 Subtitle = "Reload config.json from disk"
             },
 
-            new ListItem(new AnonymousCommand(() => DevLaunchpadConfig.ResetToDefaults()))
+            new ListItem(new SafeInvokableCommand("Reset Config to Defaults", DevLaunchpadConfig.ResetToDefaults))
             {
                 Title = "Reset Config to Defaults",
                 Subtitle = "Overwrite config.json with default settings"
