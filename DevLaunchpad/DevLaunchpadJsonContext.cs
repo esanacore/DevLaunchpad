@@ -20,6 +20,7 @@ namespace DevLaunchpad;
 [JsonSerializable(typeof(CustomCommandConfig))]
 [JsonSerializable(typeof(List<NamedUrl>))]
 [JsonSerializable(typeof(List<CustomCommandConfig>))]
+[JsonSerializable(typeof(List<string>))]
 internal sealed partial class DevLaunchpadJsonContext : JsonSerializerContext
 {
 }

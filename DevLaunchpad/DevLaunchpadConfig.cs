@@ -44,6 +44,15 @@ public sealed class DevLaunchpadConfig
         }
     ];
 
+    /// <summary>Full paths of repositories the user pinned to the top of the list.</summary>
+    public List<string> PinnedRepos { get; set; } = [];
+
+    /// <summary>Full paths of recently opened repositories, most-recent first.</summary>
+    public List<string> RecentRepos { get; set; } = [];
+
+    /// <summary>Maximum number of recent repositories to remember.</summary>
+    private const int MaxRecentRepos = 8;
+
     public static DevLaunchpadConfig Load()
     {
         string configPath = GetConfigPath();
@@ -111,6 +120,59 @@ public sealed class DevLaunchpadConfig
             WriteDebugLog($"Save failed: {ex}");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Records <paramref name="repoPath"/> as the most recently opened repository.
+    /// Best-effort: failures are logged and swallowed so launching never breaks.
+    /// </summary>
+    public static void RecordRecentRepo(string repoPath)
+    {
+        if (string.IsNullOrWhiteSpace(repoPath))
+        {
+            return;
+        }
+
+        try
+        {
+            var config = Load();
+            config.RecentRepos.RemoveAll(p => string.Equals(p, repoPath, StringComparison.OrdinalIgnoreCase));
+            config.RecentRepos.Insert(0, repoPath);
+
+            if (config.RecentRepos.Count > MaxRecentRepos)
+            {
+                config.RecentRepos.RemoveRange(MaxRecentRepos, config.RecentRepos.Count - MaxRecentRepos);
+            }
+
+            config.Save();
+        }
+        catch (Exception ex)
+        {
+            WriteDebugLog($"RecordRecentRepo failed: {ex}");
+        }
+    }
+
+    /// <summary>
+    /// Toggles whether <paramref name="repoPath"/> is pinned to the top of the list.
+    /// </summary>
+    public static CommandResult TogglePin(string repoPath)
+    {
+        if (string.IsNullOrWhiteSpace(repoPath))
+        {
+            return CommandResult.ShowToast("No repository path provided.");
+        }
+
+        var config = Load();
+        int removed = config.PinnedRepos.RemoveAll(p => string.Equals(p, repoPath, StringComparison.OrdinalIgnoreCase));
+
+        bool pinnedNow = removed == 0;
+        if (pinnedNow)
+        {
+            config.PinnedRepos.Add(repoPath);
+        }
+
+        config.Save();
+        return CommandResult.ShowToast(pinnedNow ? "Pinned repository." : "Unpinned repository.");
     }
 
     public static string GetConfigDirectory()

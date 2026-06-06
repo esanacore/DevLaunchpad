@@ -12,6 +12,10 @@ public sealed partial class RepoPage : DynamicListPage
     // Bound the recursive scan so a deep or pathological tree can't hang the extension.
     private const int MaxScanDepth = 6;
 
+    // Fluent UI glyphs (Segoe MDL2 Assets).
+    private const string PinnedGlyph = "\uE841";  // Pinned
+    private const string RepoGlyph = "\uE8B7";    // Folder
+
     // Directories that never contain a repo root worth surfacing and are expensive to walk.
     private static readonly HashSet<string> SkipDirectories = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -64,13 +68,15 @@ public sealed partial class RepoPage : DynamicListPage
                 r.FullPath.Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
-        var items = matches
-            .OrderBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .Select(r => (IListItem)new ListItem(new RepoActionsPage(r.DisplayName, r.FullPath))
-            {
-                Title = r.DisplayName,
-                Subtitle = r.FullPath,
-            })
+        var ordered = matches
+            .OrderBy(r => RankIn(config.PinnedRepos, r.FullPath) == int.MaxValue ? 1 : 0)
+            .ThenBy(r => RankIn(config.PinnedRepos, r.FullPath))
+            .ThenBy(r => RankIn(config.RecentRepos, r.FullPath))
+            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var items = ordered
+            .Select(r => (IListItem)BuildRepoItem(r, IsPinned(config.PinnedRepos, r.FullPath)))
             .ToList();
 
         if (items.Count == 0)
@@ -84,6 +90,70 @@ public sealed partial class RepoPage : DynamicListPage
 
         return items.ToArray();
     }
+
+    private ListItem BuildRepoItem(RepoEntry repo, bool pinned)
+    {
+        string path = repo.FullPath;
+        string? webUrl = repo.WebUrl;
+
+        string subtitle = repo.Branch is null ? path : $"[{repo.Branch}]  {path}";
+
+        var moreCommands = new List<IContextItem>
+        {
+            new CommandContextItem(LaunchCommand("Open Folder", path, () => ProcessLauncher.OpenFolder(path))),
+            new CommandContextItem(LaunchCommand("Open in Terminal", path, () => ProcessLauncher.OpenInTerminal(path))),
+            new Separator(),
+            new CommandContextItem(new SafeInvokableCommand(
+                "Copy Path",
+                () => ClipboardHelper.CopyText(path, "Copied repository path."))),
+        };
+
+        if (webUrl is not null)
+        {
+            string label = webUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase)
+                ? "Open on GitHub"
+                : "Open Remote in Browser";
+            moreCommands.Add(new CommandContextItem(LaunchCommand(
+                label, path, () => ProcessLauncher.OpenUrl(webUrl))));
+        }
+
+        moreCommands.Add(new Separator());
+        moreCommands.Add(new CommandContextItem(new SafeInvokableCommand(
+            pinned ? "Unpin" : "Pin",
+            () =>
+            {
+                var result = DevLaunchpadConfig.TogglePin(path);
+                RaiseItemsChanged(0);
+                return result;
+            })));
+
+        return new ListItem(LaunchCommand("Open in Editor", path, () => ProcessLauncher.OpenInEditor(path)))
+        {
+            Title = repo.DisplayName,
+            Subtitle = subtitle,
+            Icon = new IconInfo(pinned ? PinnedGlyph : RepoGlyph),
+            MoreCommands = moreCommands.ToArray(),
+        };
+    }
+
+    // Wraps a launch so the repository is recorded as recently used before it opens.
+    private static SafeInvokableCommand LaunchCommand(string name, string repoPath, Func<CommandResult> launch)
+    {
+        return new SafeInvokableCommand(name, () =>
+        {
+            DevLaunchpadConfig.RecordRecentRepo(repoPath);
+            return launch();
+        });
+    }
+
+    private static int RankIn(List<string> list, string path)
+    {
+        int index = list.FindIndex(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+        return index < 0 ? int.MaxValue : index;
+    }
+
+    private static bool IsPinned(List<string> pinned, string path)
+        => pinned.Any(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
 
     private List<RepoEntry> GetRepos(string repoRoot)
     {
@@ -116,7 +186,11 @@ public sealed partial class RepoPage : DynamicListPage
         {
             if (Directory.Exists(Path.Combine(currentPath, ".git")))
             {
-                results.Add(new RepoEntry(Path.GetRelativePath(repoRoot, currentPath), currentPath));
+                results.Add(new RepoEntry(
+                    Path.GetRelativePath(repoRoot, currentPath),
+                    currentPath,
+                    GitHelper.GetCurrentBranch(currentPath),
+                    GitHelper.GetRemoteWebUrl(currentPath)));
                 return;
             }
 
@@ -142,7 +216,7 @@ public sealed partial class RepoPage : DynamicListPage
         }
     }
 
-    private readonly record struct RepoEntry(string DisplayName, string FullPath);
+    private readonly record struct RepoEntry(string DisplayName, string FullPath, string? Branch, string? WebUrl);
 
     private sealed partial class NoOpCommand : InvokableCommand
     {
