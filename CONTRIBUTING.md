@@ -125,11 +125,34 @@ When adding a new feature page:
 
 ## Testing
 
+### Automated Tests
+
+The project includes an xUnit test suite in `DevLaunchpad.Tests/`. Run it with:
+
+```powershell
+dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --self-contained --verbosity normal
+```
+
+The suite covers:
+
+| File | What it tests |
+|------|---------------|
+| `ConfigLogicTests.cs` | Config load/save, recent repo tracking, pinning, reset |
+| `ConfigSerializationTests.cs` | JSON round-trip, AOT source-generated context, defaults |
+| `GitHelperTests.cs` | Branch parsing from `HEAD`, remote URL normalization |
+| `ProcessLauncherTests.cs` | Input validation (null/empty/missing-path guards) |
+| `RepoScannerTests.cs` | Repository discovery: depth limit, excluded directories, metadata |
+
+Test helpers in `Helpers/` provide isolated fixtures:
+- `TempConfigDir` — redirects config I/O to a throwaway temp directory.
+- `TempGitRepo` — builds `.git` directory stubs for filesystem-level tests.
+
 ### Manual Testing Checklist
 
 Before submitting:
 
-- [ ] Extension builds without errors
+- [ ] Extension builds without errors (`dotnet build`)
+- [ ] Automated tests pass (`dotnet test`)
 - [ ] Extension deploys successfully
 - [ ] All existing features still work
 - [ ] New feature works as expected
@@ -178,6 +201,7 @@ Before submitting:
 
 - [ ] Code follows project style and patterns
 - [ ] All existing features still work
+- [ ] Automated tests pass (`dotnet test`)
 - [ ] New features are documented
 - [ ] `CHANGELOG.md` is updated
 - [ ] Build succeeds without warnings

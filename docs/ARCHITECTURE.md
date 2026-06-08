@@ -367,6 +367,43 @@ case "new-type":
     break;
 ```
 
+## Testing
+
+The solution includes `DevLaunchpad.Tests`, an xUnit project targeting `net9.0-windows10.0.26100.0`.
+Tests run headlessly (no MSIX deployment required) and cover the extracted, pure-logic helpers.
+
+### Test Scope
+
+| Test File | Components Under Test |
+|-----------|----------------------|
+| `ConfigLogicTests` | `DevLaunchpadConfig` — Load, Save, ResetToDefaults, ReloadConfig, RecordRecentRepo, TogglePin |
+| `ConfigSerializationTests` | `DevLaunchpadJsonContext` — JSON round-trip, property defaults, null-list handling |
+| `GitHelperTests` | `GitHelper` — HEAD parsing (branch/detached), config parsing, URL normalization |
+| `ProcessLauncherTests` | `ProcessLauncher` — null/empty/missing-path guards, `IsWindowsTerminal` |
+| `RepoScannerTests` | `RepoScanner` — discovery, depth limit, excluded directories, branch/remote metadata |
+
+### Test Helpers
+
+```
+DevLaunchpad.Tests/Helpers/
+├── TempConfigDir.cs   # Sets ConfigDirectoryOverride to an isolated temp dir
+└── TempGitRepo.cs     # Builds .git directory stubs for filesystem-level tests
+```
+
+`TempConfigDir` uses `DevLaunchpadConfig.ConfigDirectoryOverride` to redirect all file I/O to a
+per-test temp directory, avoiding interference with the real Windows packaged storage.
+
+`TempGitRepo` writes minimal `.git/HEAD` and `.git/config` files so that `GitHelper` and
+`RepoScanner` can be exercised without running actual Git commands.
+
+### Running Tests
+
+```powershell
+dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --self-contained --verbosity normal
+```
+
+Tests are also executed automatically by the [`.github/workflows/dotnet.yml`](../.github/workflows/dotnet.yml) CI workflow on every push and pull request.
+
 ## Future Architecture Improvements
 
 ### Potential Enhancements
