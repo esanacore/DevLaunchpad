@@ -22,6 +22,16 @@ DevLaunchpad/
 │   ├── Assets/                     # Icons and visual assets
 │   ├── Package.appxmanifest       # MSIX package manifest
 │   └── DevLaunchpad.csproj        # Project file
+├── DevLaunchpad.Tests/             # Automated test project (xUnit)
+│   ├── ConfigLogicTests.cs        # Config load/save, recent repos, pinning, reset
+│   ├── ConfigSerializationTests.cs # JSON round-trip and AOT context
+│   ├── GitHelperTests.cs          # Branch parsing, remote URL normalization
+│   ├── ProcessLauncherTests.cs    # Input validation and IsWindowsTerminal
+│   ├── RepoScannerTests.cs        # Repository discovery logic
+│   ├── Helpers/
+│   │   ├── TempConfigDir.cs       # Isolated temp config directory fixture
+│   │   └── TempGitRepo.cs         # Temporary .git stub tree fixture
+│   └── DevLaunchpad.Tests.csproj  # Test project file
 ├── docs/                           # Documentation and assets
 │   └── images/                    # Screenshots and diagrams
 ├── CHANGELOG.md                    # Version history
@@ -183,7 +193,7 @@ Contributions are welcome! To contribute:
 1. **Fork the repository**
 2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
 3. **Make your changes** with clear, focused commits
-4. **Test thoroughly**: Build, deploy, and test in Command Palette
+4. **Test thoroughly**: Run automated tests (`dotnet test`) and verify in Command Palette
 5. **Submit a pull request** with a description of changes
 
 ### Development Guidelines
