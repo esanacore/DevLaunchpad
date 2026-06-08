@@ -9,19 +9,9 @@ namespace DevLaunchpad.Pages;
 
 public sealed partial class RepoPage : DynamicListPage
 {
-    // Bound the recursive scan so a deep or pathological tree can't hang the extension.
-    private const int MaxScanDepth = 6;
-
     // Fluent UI glyphs (Segoe MDL2 Assets).
     private const string PinnedGlyph = "\uE841";  // Pinned
     private const string RepoGlyph = "\uE8B7";    // Folder
-
-    // Directories that never contain a repo root worth surfacing and are expensive to walk.
-    private static readonly HashSet<string> SkipDirectories = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "node_modules", "bin", "obj", ".vs", ".idea", ".vscode",
-        "packages", "dist", "build", "out", "target", "vendor", "__pycache__",
-    };
 
     private readonly object _cacheLock = new();
     private List<RepoEntry>? _cache;
@@ -164,62 +154,15 @@ public sealed partial class RepoPage : DynamicListPage
                 return _cache;
             }
 
-            var discovered = new List<RepoEntry>();
-            try
-            {
-                ScanDirectory(repoRoot, discovered, repoRoot, 0);
-            }
-            catch
-            {
-                // Keep the extension resilient if anything unexpected happens.
-            }
-
-            _cache = discovered;
+            _cache = RepoScanner.Scan(repoRoot);
             _cachedRoot = repoRoot;
-            return discovered;
+            return _cache;
         }
     }
-
-    private static void ScanDirectory(string currentPath, List<RepoEntry> results, string repoRoot, int depth)
-    {
-        try
-        {
-            if (Directory.Exists(Path.Combine(currentPath, ".git")))
-            {
-                results.Add(new RepoEntry(
-                    Path.GetRelativePath(repoRoot, currentPath),
-                    currentPath,
-                    GitHelper.GetCurrentBranch(currentPath),
-                    GitHelper.GetRemoteWebUrl(currentPath)));
-                return;
-            }
-
-            if (depth >= MaxScanDepth)
-            {
-                return;
-            }
-
-            foreach (var subdirectory in Directory.GetDirectories(currentPath))
-            {
-                string name = Path.GetFileName(subdirectory);
-                if (SkipDirectories.Contains(name))
-                {
-                    continue;
-                }
-
-                ScanDirectory(subdirectory, results, repoRoot, depth + 1);
-            }
-        }
-        catch
-        {
-            // Ignore folders we cannot access.
-        }
-    }
-
-    private readonly record struct RepoEntry(string DisplayName, string FullPath, string? Branch, string? WebUrl);
 
     private sealed partial class NoOpCommand : InvokableCommand
     {
         public override CommandResult Invoke() => CommandResult.KeepOpen();
     }
 }
+

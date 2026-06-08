@@ -33,3 +33,7 @@ jobs:
       # Release enables trimming (PublishTrimmed), which requires a self-contained,
       # RID-specific build, so build self-contained for win-x64.
       run: dotnet build DevLaunchpad/DevLaunchpad.csproj --no-restore -c ${{ matrix.configuration }} -p:Platform=x64 -r win-x64 --self-contained
+
+    - name: Test
+      run: dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c ${{ matrix.configuration }} -p:Platform=x64 -r win-x64 --self-contained --verbosity normal
+

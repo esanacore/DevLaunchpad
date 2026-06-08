@@ -130,7 +130,7 @@ internal static class ProcessLauncher
         return Start(startInfo);
     }
 
-    private static bool IsWindowsTerminal(string terminalCommand)
+    internal static bool IsWindowsTerminal(string terminalCommand)
     {
         string exe = Path.GetFileNameWithoutExtension(terminalCommand).ToLowerInvariant();
         return exe is "wt" or "wtd";

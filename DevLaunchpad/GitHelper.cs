@@ -77,7 +77,7 @@ internal static class GitHelper
         }
     }
 
-    private static string? ParseOriginUrl(string[] lines)
+    internal static string? ParseOriginUrl(string[] lines)
     {
         bool inOrigin = false;
         foreach (string raw in lines)
@@ -104,7 +104,7 @@ internal static class GitHelper
         return null;
     }
 
-    private static string? NormalizeRemoteUrl(string url)
+    internal static string? NormalizeRemoteUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {

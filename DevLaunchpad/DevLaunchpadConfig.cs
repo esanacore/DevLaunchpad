@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -175,8 +175,19 @@ public sealed class DevLaunchpadConfig
         return CommandResult.ShowToast(pinnedNow ? "Pinned repository." : "Unpinned repository.");
     }
 
+    /// <summary>
+    /// When set, overrides the config directory path returned by <see cref="GetConfigDirectory"/>.
+    /// Used by tests to redirect config I/O to a temp directory without requiring a packaged app context.
+    /// </summary>
+    internal static string? ConfigDirectoryOverride { get; set; }
+
     public static string GetConfigDirectory()
     {
+        if (!string.IsNullOrEmpty(ConfigDirectoryOverride))
+        {
+            return ConfigDirectoryOverride;
+        }
+
         // LocalFolder persists for the lifetime of the install. LocalCacheFolder (used by earlier
         // versions) can be purged by Windows/Storage Sense, which would silently lose user settings.
         return Path.Combine(ApplicationData.Current.LocalFolder.Path, "DevLaunchpad");
