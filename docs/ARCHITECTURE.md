@@ -399,7 +399,7 @@ per-test temp directory, avoiding interference with the real Windows packaged st
 ### Running Tests
 
 ```powershell
-dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --self-contained --verbosity normal
+dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --verbosity normal
 ```
 
 Tests are also executed automatically by the [`.github/workflows/dotnet.yml`](../.github/workflows/dotnet.yml) CI workflow on every push and pull request.

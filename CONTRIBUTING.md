@@ -130,7 +130,7 @@ When adding a new feature page:
 The project includes an xUnit test suite in `DevLaunchpad.Tests/`. Run it with:
 
 ```powershell
-dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --self-contained --verbosity normal
+dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --verbosity normal
 ```
 
 The suite covers:
