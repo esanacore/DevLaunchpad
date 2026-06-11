@@ -2,8 +2,6 @@
 
 A Microsoft PowerToys Command Palette extension for managing developer workflows.
 
-A Microsoft PowerToys Command Palette extension for managing developer workflows.
-
 ## Engineering Constitution
 
 A Microsoft PowerToys Command Palette extension for managing developer workflows. Quickly access Git repositories, launch developer tools, open local servers, manage favorite websites, and execute custom commands—all from a single, fast interface integrated with Windows Command Palette.
@@ -168,30 +166,6 @@ Comprehensive configuration management:
 - **Process Execution**: Uses `UseShellExecute = true` for safe process launching
 - **Path Validation**: Validates directories and executables before execution
 
-## Troubleshooting
-
-### Extension Not Appearing
-1. Ensure PowerToys is running and Command Palette is enabled
-2. Press `Win+Alt+Space` → Type `reload` → Select "Reload extensions"
-3. Check if extension is deployed: Look for deployment success in VS Output window
-
-### Build Errors
-- **NETSDK1097**: Project includes `RuntimeIdentifier` fix for single-file publish
-- Missing dependencies: Ensure NuGet packages are restored
-
-### Configuration Issues
-1. Navigate to Configuration page to view exact config file location
-2. Check `debug.log` in config folder for error details
-3. Use "Reset Config to Defaults" to resolve corrupted config
-4. Ensure JSON syntax is valid when manually editing
-
-### Commands Not Working
-- Verify `code`, `wt`, `powershell.exe` are in your system PATH
-- Check custom command targets are valid executables
-- Review debug log for execution errors
-
-For additional issues, check the `debug.log` file in the config directory (path shown in Configuration page).
-
 ## Contributing & Workflow
 
 Contributions are welcome! To contribute:
@@ -220,19 +194,6 @@ See `CHANGELOG.md` for recent changes and version history.
 - **WinRT COM Server** (out-of-process communication)
 - **MSIX Packaging** (Windows Store distribution)
 - **Source-Generated JSON** (AOT-compatible serialization)
-
-## Roadmap
-
-Planned enhancements:
-
-- [ ] Icon customization per page/command
-- [ ] Git integration (status, branches, operations)
-- [ ] Search and filtering for large repository lists
-- [ ] Recent items tracking
-- [ ] Theme support
-- [ ] Keyboard shortcuts configuration
-- [ ] Export/import configuration profiles
-- [ ] Cloud sync for configuration
 
 ## License
 

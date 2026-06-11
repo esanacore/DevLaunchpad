@@ -1,29 +1,35 @@
 # TODO
 
-This file is the living roadmap for the project.
-
-Keep entries specific, actionable, and current.
+This file is the living roadmap for Dev Launchpad.
 
 ## Features
 
-- [ ] Add project-specific feature opportunities here.
+- [ ] Git integration (status, branches, operations)
+- [ ] Search and filtering for large repository lists
+- [ ] Recent items tracking
+- [ ] Theme support
+- [ ] Keyboard shortcuts configuration
+- [ ] Cloud sync for configuration (optional)
 
 ## Technical Debt
 
-- [ ] Add known compromises and cleanup needs here.
+- [ ] Async/Await: Use async pattern for I/O operations.
+- [ ] Background Services: Long-running tasks (git status, indexing).
 
 ## Refactoring
 
-- [ ] Add maintainability improvements here.
+- [ ] Plugin System: Load additional features from external assemblies.
 
 ## Testing
 
-- [ ] Add coverage gaps and test improvements here.
+- [ ] Increase test coverage for new page implementations.
 
 ## Documentation
 
-- [ ] Add missing or outdated documentation here.
+- [ ] Add screenshots to README.md.
+- [ ] Icon customization per page/command (document how-to).
 
 ## Nice-to-Have
 
-- [ ] Add future enhancements here.
+- [ ] Export/import configuration profiles.
+- [ ] Telemetry: Anonymous usage analytics (opt-in).
