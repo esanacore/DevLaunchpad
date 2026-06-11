@@ -1,24 +1,25 @@
 # Command Reference
 
-This document provides a quick reference for common commands used in this project.
+This document provides a quick reference for common commands used in Dev Launchpad.
+
+all commands should be run from the repository root.
 
 ## Development
 
-- `npm run dev`: Start the development server.
-- `npm run build`: Build the project for production.
+- `build.bat`: Build the solution using msbuild (if configured).
+- `dotnet build`: Build the solution.
 
 ## Testing
 
-- `npm test`: Run all tests.
-- `npm run test:watch`: Run tests in watch mode.
-- `npm run test:coverage`: Run tests and generate a coverage report.
+- `dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj -c Debug -p:Platform=x64 -r win-x64 --verbosity normal`: Run x64 unit tests.
 
 ## Linting & Formatting
 
-- `npm run lint`: Run the linter.
-- `npm run format`: Format the code.
+- `dotnet format`: Check and apply formatting fixes.
 
-## Operations
+## Deployment
 
-- `npm start`: Start the production server.
-- <!-- Add more project-specific commands here -->
+- `dotnet publish Dev,aunchpad/DevLaunchpad.csproj -c Release -r win-x64`: Publish for win-x64.
+## Command Palette Interaction
+
+- `reload`: Type this in Command Palette aWin+Alt+Space) to refesh extensions.

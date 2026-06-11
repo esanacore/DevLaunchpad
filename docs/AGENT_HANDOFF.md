@@ -1,20 +1,17 @@
 # Agent Handoff
 
-This document helps transition work between different AI agent sessions or different agents.
+This document helps transition work between different AI agent sessions.
 
-## How to Handoff
+1. **Current Status**: The Engineering Constitution v1.4.0 has been installed and partially refined.
+   - README.md has been merged with the constitution section.
+   - docs/SETUP.md has been populated with DevLaunchpad-specific instructions.
+   - doss/COMMAND_REFERENCE.md has been populated with dotnet build and test commands.
 
-When you are finishing a task or session, record the state here or in a dedicated `HANDOFF.md` file:
+2. **Next Steps**:
+   - Review `docs/TROUBLESHOOTING.md` and populate it from README.md's Troubleshooting section.
+   - Review `docs/ARCHITECTURE.md` and consider merging it with the constitution template.
+   - Update `TODO.md` with the roadmap items from README.md.
 
-1. **Current Status**: What was achieved?
-2. **Next Steps**: What should the next agent do first?
-3. **Known Blockers**: What issues were encountered?
-4. **Context Hints**: Are there specific files or discussions the next agent should read?
+3. **Known Blockers**: None.
 
-## Handoff Template
-
-### Session: [Date/Time]
-- **Accomplishments**: <!-- List here -->
-- **Pending Work**: <!-- List here -->
-- **Verification Run**: <!-- Tests run and results -->
-- **Instructions for Next Agent**: <!-- Be specific -->
+4. **Context Hints**: DevLaunchpad is a .vs solution; tests are xUnit.

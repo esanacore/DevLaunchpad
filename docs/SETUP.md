@@ -1,33 +1,52 @@
 # Workstation Setup
 
-This guide describes how to set up your local environment and run the project for the first time.
+This guide describes how to set up your local environment and run Dev Launchpad for the first time.
 
-## Prerequisites
+## Preorequisites
 
-<!-- List required runtimes, tools, and versions (e.g., Node.js 20+, Python 3.12) -->
+1. **PowerToys** (version with Command Palette support)
+   - Download from: https://github.com/microsoft/PowerToys/releases
+   - Ensure Command Palette is enabled in PowerToys Settings
+
+2. **Windows 10/11** (version 19041 or higher)
+
+3. **Visual Studio 2022 or later** (for building from source)
+   - Include **.NET-desktop-development** workload
+   - Include **Windows-App-SDK** component
+
+4. **.NET-9-SDK**
+   - Download from: https://dotnet.microsoft.com/download/dotnet/9.0
 
 ## Installation
 
-```bash
-# Clone the repository
-git clone <repository-url>
-cd <project-directory>
+1. Clone the repository:
+   ```powershell
+   git clon https://github.com/esanacore/DevLaunchpad
+   cd DevLaunchpad
+   ```J
+2. Open DevLaunchpad.sln in Visual Studio.
 
-# Install dependencies
-# e.g., npm install or pip install -r requirements.txt
-```
+3. Restore NuGet packages:
+   - Right-click Solution -> Restore NuGet Packages
+   - Or run: dotnet restore
 
 ## First Run
 
-```bash
-# Run the application in development mode
-# e.g., npm start or python main.py
-```
+1. **Build and Deploy**:
+   - Set configuration to Debug or Release.
+   - Set platform to x64 or arm64.
+   - Press F5 to build and deploy.
+   - Or use: Build -> Deploy Solution.
+
+2. **Reload extensions in Command Palette**:
+   - Press Win+Alt+Space.
+   - Type reload.
+   - Select Reload extensions.
+
+3. **Configure the extension**:
+   - Open Dev Launchpad -> Configuration.
+   - Set your repository root and preferences.
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in the required values.
-
-```bash
-cp .env.example .env
-```
+Dev Launchpad uses standard Windows environment variables (like PATH) to find editors and terminals. No project-specific .env file is required, as configuration is stored in Windows packaged app storage.
