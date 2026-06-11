@@ -373,3 +373,4 @@ FodyWeavers.xsd
 # Copilot/agent local configuration and prompts
 .agents/
 .github/agents/
+.constitution-bootstrap/
