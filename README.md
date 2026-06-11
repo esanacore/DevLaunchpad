@@ -1,6 +1,14 @@
 # Dev Launchpad
 
-A Microsoft PowerToys Command Palette extension for managing developer workflows. Quickly access Git repositories, launch developer tools, open local servers, manage favorite websites, and execute custom commands—all from a single, fast interface integrated with Windows Command Palette.
+A Microsoft PowerToys Command Palette extension for managing developer workflows.
+
+<!-- CONSTITUTION_START -->
+## Engineering Constitution
+
+This project follows the Engineering Constitution. The constitution is included as a Git submodule in constitution/.
+
+AI agents and contributors should read AGENTS.md before beginning work.
+<!-- CONSTITUTION_END -->
 
 ## Project Structure
 
