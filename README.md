@@ -3,11 +3,7 @@
 A Microsoft PowerToys Command Palette extension for managing developer workflows.
 
 <!-- CONSTITUTION_START -->
-## Engineering Constitution
-
-This project follows the Engineering Constitution. The constitution is included as a Git submodule in constitution/.
-
-AI agents and contributors should read AGENTS.md before beginning work.
+[![Eric's Engineering Constitution](https://img.shields.io/badge/Eric's%20Engineering%20Constitution-Adopted-blue)](constitution/CONSTITUTION.md)
 <!-- CONSTITUTION_END -->
 
 ## Project Structure
