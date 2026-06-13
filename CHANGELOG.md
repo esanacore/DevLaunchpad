@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path, open the origin remote in a browser, pin/unpin)
 - **Pinned** and **recently opened** repositories are remembered (in `config.json`) and floated to
   the top of the list
+- Expanded automated test coverage: config default generation and validity (all custom-command
+  types present), path helpers, debug-log append, `ProcessLauncher` editor/terminal guard paths,
+  and the `DevLaunchpadSettings` config-seeding bridge
 - Microsoft Store packaging: a `MSIX` CI workflow that builds unsigned **x64** and **arm64**
   `.msix` packages and uploads them as artifacts, the `win-x64`/`win-arm64` publish profiles the
   packaging targets require, plus `docs/STORE.md` (submission checklist) and `docs/PRIVACY.md`
@@ -58,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed dead template page (`DevLaunchpadPage`) that shipped a "TODO" placeholder item
 - Repaired CI: removed the placeholder `.NET Core Desktop` workflow and fixed the build workflow
   (correct platform, removed nonexistent test step)
+- Repaired the test project build: pinned its `WindowsSdkPackageVersion` to match the main project
+  (so it can reference `DevLaunchpad.dll`, fixing `NETSDK1148`) and enabled `ImplicitUsings` (fixing
+  `CS0246` on `System` types). `dotnet test` now compiles under both the .NET 9 and .NET 10 SDKs.
+- Made config-touching tests run sequentially via a shared xUnit collection, eliminating races on
+  the process-wide `ConfigDirectoryOverride` static
 
 ### Security
 - Configuration stored in Windows packaged app storage (LocalFolder)
