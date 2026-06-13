@@ -9,6 +9,7 @@ namespace DevLaunchpad.Tests;
 /// Tests for <see cref="DevLaunchpadConfig"/> business logic: Load/Save, recent repos,
 /// pinning, and reset. Each test uses an isolated temp directory via <see cref="TempConfigDir"/>.
 /// </summary>
+[Collection(ConfigStateCollection.Name)]
 public sealed class ConfigLogicTests : IDisposable
 {
     private readonly TempConfigDir _configDir = new();
