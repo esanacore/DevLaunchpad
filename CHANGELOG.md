@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.msix` packages and uploads them as artifacts, the `win-x64`/`win-arm64` publish profiles the
   packaging targets require, plus `docs/STORE.md` (submission checklist) and `docs/PRIVACY.md`
   (privacy policy required by the Store)
+- README Update Check CI workflow (`readme-update-check.yml`) that fails a pull request into `main`
+  when qualifying code is changed (`.cs`/`.csproj`/`.sln`/`.props`/`.targets`/`.appxmanifest` or a
+  workflow file) without a matching `README.md` update; `docs/` changes and the workflow file
+  itself are exempt, and draft PRs are skipped
 
 ### Changed
 - Package manifest cleaned up for Store submission: real publisher identity placeholders
