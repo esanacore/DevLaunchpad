@@ -181,6 +181,7 @@ Contributions are welcome! To contribute:
 - Follow existing code patterns and structure
 - Keep features modular (one page per feature)
 - Update `CHANGELOG.md` with changes
+- Update `README.md` whenever code changes affect behavior, setup, or developer workflow
 - Test configuration loading and error handling
 - Ensure AOT compatibility (source-generated JSON)
 
