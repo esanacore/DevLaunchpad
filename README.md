@@ -15,6 +15,9 @@ DevLaunchpad/
 │   ├── Program.cs                  # COM server registration
 │   ├── DevLaunchpadCommandsProvider.cs  # Command definitions
 │   ├── DevLaunchpadConfig.cs       # Configuration management
+│   ├── RepoScanner.cs              # Git repository discovery (bounded recursive scan)
+│   ├── GitHelper.cs               # Branch/remote/clone-URL inspection (no process spawn)
+│   ├── ProjectTypeDetector.cs     # Tech-stack inference from repo marker files
 │   ├── DevLaunchpadJsonContext.cs  # JSON serialization (AOT-compatible)
 │   ├── Pages/                      # Feature implementations
 │   │   ├── RepoPage.cs            # Git repository browser (live search, branch, pins, context menu)
@@ -29,7 +32,8 @@ DevLaunchpad/
 ├── DevLaunchpad.Tests/             # Automated test project (xUnit)
 │   ├── ConfigLogicTests.cs        # Config load/save, recent repos, pinning, reset
 │   ├── ConfigSerializationTests.cs # JSON round-trip and AOT context
-│   ├── GitHelperTests.cs          # Branch parsing, remote URL normalization
+│   ├── GitHelperTests.cs          # Branch parsing, remote/clone/issue/PR URL logic
+│   ├── ProjectTypeDetectorTests.cs # Tech-stack detection from marker files
 │   ├── ProcessLauncherTests.cs    # Input validation and IsWindowsTerminal
 │   ├── RepoScannerTests.cs        # Repository discovery logic
 │   ├── Helpers/
@@ -44,7 +48,8 @@ DevLaunchpad/
 
 ## Features
 
-- **Repository Management**: Automatically discover and access Git repositories
+- **Repository Management**: Automatically discover and access Git repositories, each tagged with
+  its current branch and detected tech stack (.NET, Node, Rust, Go, Python, …)
 - **Developer Tools**: Quick launch for VS Code, PowerShell, Windows Terminal
 - **Local Servers**: One-click access to localhost development URLs
 - **Favorite Websites**: Bookmark and quickly open frequently used sites
@@ -120,10 +125,17 @@ Once published, install directly from the Microsoft Store. See
 ### 📁 Repositories (`RepoPage`)
 - Recursively scans configured repo root for Git repositories
 - Detects repositories by `.git` folders
+- Shows each repo's **current branch** and detected **tech stack** (e.g. `[main]  (Rust)`),
+  read straight from the filesystem without spawning `git`
+- **Live search** filters by name, path, *or* tech stack — type `rust` to see only Rust repos
 - For each repository, provides actions:
-  - **Open Folder**: Opens in Windows Explorer
   - **Open in Editor**: Opens in configured editor (VS Code, etc.)
+  - **Open Folder**: Opens in Windows Explorer
   - **Open in Terminal**: Opens configured terminal in repo directory
+  - **Copy Path** / **Copy Clone Command** (`git clone <url>`)
+  - **Open Remote in Browser**, and for GitHub/GitLab/Bitbucket repos,
+    **Open Issues** and **Open Pull/Merge Requests**
+  - **Pin/Unpin** to float a repo to the top of the list
 - Displays relative paths from repo root for easy navigation
 
 ### 🛠️ Developer Tools (`DevToolsPage`)

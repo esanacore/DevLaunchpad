@@ -55,7 +55,9 @@ public sealed partial class RepoPage : DynamicListPage
         {
             matches = repos.Where(r =>
                 r.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                r.FullPath.Contains(query, StringComparison.OrdinalIgnoreCase));
+                r.FullPath.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (r.ProjectType is not null &&
+                 r.ProjectType.Contains(query, StringComparison.OrdinalIgnoreCase)));
         }
 
         var ordered = matches
@@ -86,7 +88,7 @@ public sealed partial class RepoPage : DynamicListPage
         string path = repo.FullPath;
         string? webUrl = repo.WebUrl;
 
-        string subtitle = repo.Branch is null ? path : $"[{repo.Branch}]  {path}";
+        string subtitle = BuildSubtitle(repo);
 
         var moreCommands = new List<IContextItem>
         {
@@ -105,6 +107,29 @@ public sealed partial class RepoPage : DynamicListPage
                 : "Open Remote in Browser";
             moreCommands.Add(new CommandContextItem(LaunchCommand(
                 label, path, () => ProcessLauncher.OpenUrl(webUrl))));
+
+            string? issuesUrl = GitHelper.GetIssuesUrl(webUrl);
+            if (issuesUrl is not null)
+            {
+                moreCommands.Add(new CommandContextItem(
+                    new SafeInvokableCommand("Open Issues", () => ProcessLauncher.OpenUrl(issuesUrl))));
+            }
+
+            string? pullRequestsUrl = GitHelper.GetPullRequestsUrl(webUrl);
+            if (pullRequestsUrl is not null)
+            {
+                string prLabel = $"Open {GitHelper.GetPullRequestsLabel(webUrl)}";
+                moreCommands.Add(new CommandContextItem(
+                    new SafeInvokableCommand(prLabel, () => ProcessLauncher.OpenUrl(pullRequestsUrl))));
+            }
+
+            string? cloneCommand = GitHelper.BuildCloneCommand(webUrl);
+            if (cloneCommand is not null)
+            {
+                moreCommands.Add(new CommandContextItem(new SafeInvokableCommand(
+                    "Copy Clone Command",
+                    () => ClipboardHelper.CopyText(cloneCommand, "Copied clone command."))));
+            }
         }
 
         moreCommands.Add(new Separator());
@@ -124,6 +149,25 @@ public sealed partial class RepoPage : DynamicListPage
             Icon = new IconInfo(pinned ? PinnedGlyph : RepoGlyph),
             MoreCommands = moreCommands.ToArray(),
         };
+    }
+
+    // Builds the list subtitle as a metadata prefix (branch, project type) followed by the path,
+    // e.g. "[main]  (Rust)  C:\src\my-repo".
+    private static string BuildSubtitle(RepoEntry repo)
+    {
+        var tags = new List<string>();
+
+        if (repo.Branch is not null)
+        {
+            tags.Add($"[{repo.Branch}]");
+        }
+
+        if (repo.ProjectType is not null)
+        {
+            tags.Add($"({repo.ProjectType})");
+        }
+
+        return tags.Count == 0 ? repo.FullPath : $"{string.Join("  ", tags)}  {repo.FullPath}";
     }
 
     // Wraps a launch so the repository is recorded as recently used before it opens.

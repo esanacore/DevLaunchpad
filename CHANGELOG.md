@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Repository tech-stack detection**: each repository is tagged with its primary stack
+  (.NET, Node, Rust, Go, Python, Java, Dart, Ruby, PHP, Docker) inferred from root marker files
+  (`*.sln`/`*.csproj`, `package.json`, `Cargo.toml`, `go.mod`, etc.) by a new read-only
+  `ProjectTypeDetector`. The tag is shown in the Repositories list (e.g. `[main]  (Rust)`) and is
+  matched by live search, so typing a stack name filters the list to that ecosystem. Like
+  `GitHelper`, detection reads the filesystem and never spawns a process.
+- **Repository quick links and clone command**: the Repositories context menu gains **Copy Clone
+  Command** (`git clone <url>.git`) for any repo with a remote, plus host-aware **Open Issues** and
+  **Open Pull Requests** / **Open Merge Requests** actions for GitHub, GitLab, and Bitbucket remotes.
+- Unit tests for the new logic: `ProjectTypeDetectorTests` (all markers, priority ordering, and
+  guard paths), `GitHelper` clone-command and issue/PR URL derivation, and `RepoScanner`
+  project-type population.
 - Initial release of Dev Launchpad Command Palette extension
 - Repository browser with Git detection
 - Developer tools quick launch

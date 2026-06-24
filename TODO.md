@@ -5,8 +5,12 @@ This file is the living roadmap for Dev Launchpad.
 ## Features
 
 - [ ] Git integration (status, branches, operations)
-- [ ] Search and filtering for large repository lists
-- [ ] Recent items tracking
+  - [x] Read-only branch/remote inspection (no process spawn) via `GitHelper`
+  - [x] Repository tech-stack detection (`ProjectTypeDetector`) shown in the list and searchable
+  - [x] Quick links (Issues, Pull/Merge Requests) and Copy Clone Command for GitHub/GitLab/Bitbucket
+  - [ ] Dirty/ahead-behind status indicators
+- [x] Search and filtering for large repository lists (also filters by tech stack)
+- [x] Recent items tracking
 - [ ] Theme support
 - [ ] Keyboard shortcuts configuration
 - [ ] Cloud sync for configuration (optional)

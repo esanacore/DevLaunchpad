@@ -104,6 +104,118 @@ internal static class GitHelper
         return null;
     }
 
+    /// <summary>
+    /// Builds an HTTPS <c>git clone</c> command line for a normalized web URL
+    /// (the kind returned by <see cref="GetRemoteWebUrl"/>). Returns <c>null</c> for empty input.
+    /// </summary>
+    public static string? BuildCloneCommand(string webUrl)
+    {
+        if (string.IsNullOrWhiteSpace(webUrl))
+        {
+            return null;
+        }
+
+        string cloneUrl = webUrl.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? webUrl
+            : webUrl + ".git";
+
+        return $"git clone {cloneUrl}";
+    }
+
+    /// <summary>
+    /// Derives the issues page URL for a normalized web URL on a recognized host
+    /// (GitHub, GitLab, Bitbucket). Returns <c>null</c> for unrecognized hosts or empty input.
+    /// </summary>
+    public static string? GetIssuesUrl(string webUrl)
+    {
+        string? baseUrl = HostKind(webUrl, out string kind);
+        if (baseUrl is null)
+        {
+            return null;
+        }
+
+        return kind switch
+        {
+            "github" => $"{baseUrl}/issues",
+            "gitlab" => $"{baseUrl}/-/issues",
+            "bitbucket" => $"{baseUrl}/issues",
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Derives the pull/merge requests page URL for a normalized web URL on a recognized host.
+    /// Returns <c>null</c> for unrecognized hosts or empty input.
+    /// </summary>
+    public static string? GetPullRequestsUrl(string webUrl)
+    {
+        string? baseUrl = HostKind(webUrl, out string kind);
+        if (baseUrl is null)
+        {
+            return null;
+        }
+
+        return kind switch
+        {
+            "github" => $"{baseUrl}/pulls",
+            "gitlab" => $"{baseUrl}/-/merge_requests",
+            "bitbucket" => $"{baseUrl}/pull-requests",
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// The label a host uses for change proposals: "Merge Requests" on GitLab,
+    /// "Pull Requests" elsewhere. Returns <c>null</c> when the host is unrecognized.
+    /// </summary>
+    public static string? GetPullRequestsLabel(string webUrl)
+    {
+        if (HostKind(webUrl, out string kind) is null)
+        {
+            return null;
+        }
+
+        return kind == "gitlab" ? "Merge Requests" : "Pull Requests";
+    }
+
+    /// <summary>
+    /// Classifies the host of <paramref name="webUrl"/> as "github", "gitlab", or "bitbucket".
+    /// Returns the trimmed base URL (out via the return value) and sets <paramref name="kind"/>,
+    /// or <c>null</c> when the URL is empty/unparseable or the host is unrecognized.
+    /// </summary>
+    private static string? HostKind(string webUrl, out string kind)
+    {
+        kind = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(webUrl) ||
+            !Uri.TryCreate(webUrl, UriKind.Absolute, out Uri? uri))
+        {
+            return null;
+        }
+
+        string host = uri.Host.ToLowerInvariant();
+        string baseUrl = webUrl.TrimEnd('/');
+
+        if (host.Contains("github", StringComparison.Ordinal))
+        {
+            kind = "github";
+        }
+        else if (host.Contains("gitlab", StringComparison.Ordinal))
+        {
+            kind = "gitlab";
+        }
+        else if (host.Contains("bitbucket", StringComparison.Ordinal))
+        {
+            kind = "bitbucket";
+        }
+        else
+        {
+            return null;
+        }
+
+        return baseUrl;
+    }
+
     internal static string? NormalizeRemoteUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))

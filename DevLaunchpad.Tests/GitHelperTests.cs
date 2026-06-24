@@ -265,4 +265,89 @@ public sealed class GitHelperTests : IDisposable
 
         Assert.Null(webUrl);
     }
+
+    // ── BuildCloneCommand ───────────────────────────────────────────
+
+    [Fact]
+    public void BuildCloneCommand_AddsDotGitSuffix()
+    {
+        Assert.Equal(
+            "git clone https://github.com/owner/repo.git",
+            GitHelper.BuildCloneCommand("https://github.com/owner/repo"));
+    }
+
+    [Fact]
+    public void BuildCloneCommand_DoesNotDoubleDotGit()
+    {
+        Assert.Equal(
+            "git clone https://github.com/owner/repo.git",
+            GitHelper.BuildCloneCommand("https://github.com/owner/repo.git"));
+    }
+
+    [Fact]
+    public void BuildCloneCommand_NullOrEmpty_ReturnsNull()
+    {
+        Assert.Null(GitHelper.BuildCloneCommand(null!));
+        Assert.Null(GitHelper.BuildCloneCommand(""));
+        Assert.Null(GitHelper.BuildCloneCommand("   "));
+    }
+
+    // ── GetIssuesUrl ────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData("https://github.com/owner/repo", "https://github.com/owner/repo/issues")]
+    [InlineData("https://gitlab.com/group/project", "https://gitlab.com/group/project/-/issues")]
+    [InlineData("https://bitbucket.org/owner/repo", "https://bitbucket.org/owner/repo/issues")]
+    public void GetIssuesUrl_KnownHosts_ReturnsExpected(string webUrl, string expected)
+    {
+        Assert.Equal(expected, GitHelper.GetIssuesUrl(webUrl));
+    }
+
+    [Fact]
+    public void GetIssuesUrl_TrimsTrailingSlash()
+    {
+        Assert.Equal(
+            "https://github.com/owner/repo/issues",
+            GitHelper.GetIssuesUrl("https://github.com/owner/repo/"));
+    }
+
+    [Fact]
+    public void GetIssuesUrl_UnknownHostOrInvalid_ReturnsNull()
+    {
+        Assert.Null(GitHelper.GetIssuesUrl("https://example.com/owner/repo"));
+        Assert.Null(GitHelper.GetIssuesUrl("not a url"));
+        Assert.Null(GitHelper.GetIssuesUrl(""));
+    }
+
+    // ── GetPullRequestsUrl / GetPullRequestsLabel ───────────────────
+
+    [Theory]
+    [InlineData("https://github.com/owner/repo", "https://github.com/owner/repo/pulls")]
+    [InlineData("https://gitlab.com/group/project", "https://gitlab.com/group/project/-/merge_requests")]
+    [InlineData("https://bitbucket.org/owner/repo", "https://bitbucket.org/owner/repo/pull-requests")]
+    public void GetPullRequestsUrl_KnownHosts_ReturnsExpected(string webUrl, string expected)
+    {
+        Assert.Equal(expected, GitHelper.GetPullRequestsUrl(webUrl));
+    }
+
+    [Fact]
+    public void GetPullRequestsUrl_UnknownHost_ReturnsNull()
+    {
+        Assert.Null(GitHelper.GetPullRequestsUrl("https://example.com/owner/repo"));
+    }
+
+    [Theory]
+    [InlineData("https://github.com/owner/repo", "Pull Requests")]
+    [InlineData("https://bitbucket.org/owner/repo", "Pull Requests")]
+    [InlineData("https://gitlab.com/group/project", "Merge Requests")]
+    public void GetPullRequestsLabel_ReflectsHostTerminology(string webUrl, string expected)
+    {
+        Assert.Equal(expected, GitHelper.GetPullRequestsLabel(webUrl));
+    }
+
+    [Fact]
+    public void GetPullRequestsLabel_UnknownHost_ReturnsNull()
+    {
+        Assert.Null(GitHelper.GetPullRequestsLabel("https://example.com/owner/repo"));
+    }
 }

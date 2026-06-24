@@ -117,6 +117,29 @@ public sealed class RepoScannerTests : IDisposable
     }
 
     [Fact]
+    public void Scan_PopulatesProjectType()
+    {
+        string repo = _temp.CreateSubRepo("rust-repo", branch: "main");
+        File.WriteAllText(Path.Combine(repo, "Cargo.toml"), "[package]");
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.Equal("Rust", results[0].ProjectType);
+    }
+
+    [Fact]
+    public void Scan_ProjectTypeIsNull_WhenNoMarkers()
+    {
+        _temp.CreateSubRepo("plain-repo", branch: "main");
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.Null(results[0].ProjectType);
+    }
+
+    [Fact]
     public void Scan_SkipsMultipleExcludedDirTypes()
     {
         // Test several excluded directory names.
