@@ -62,7 +62,8 @@ internal static class RepoScanner
                     Path.GetRelativePath(repoRoot, currentPath),
                     currentPath,
                     GitHelper.GetCurrentBranch(currentPath),
-                    GitHelper.GetRemoteWebUrl(currentPath)));
+                    GitHelper.GetRemoteWebUrl(currentPath),
+                    ProjectTypeDetector.Detect(currentPath)));
                 return;
             }
 
@@ -92,4 +93,9 @@ internal static class RepoScanner
 /// <summary>
 /// Represents a discovered Git repository with display metadata.
 /// </summary>
-internal readonly record struct RepoEntry(string DisplayName, string FullPath, string? Branch, string? WebUrl);
+internal readonly record struct RepoEntry(
+    string DisplayName,
+    string FullPath,
+    string? Branch,
+    string? WebUrl,
+    string? ProjectType);
