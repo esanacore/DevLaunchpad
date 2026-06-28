@@ -13,8 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.git/logs/refs/stash` with no process spawn.
 - **Status-based search filtering**: typing `dirty`, `unsynced`, `ahead`, `behind`, `stashed`,
   or `stash` in the Repositories search box filters to matching repos based on their git status.
-- Added regression coverage for the in-palette Settings write-back path, including blank-value
-  handling so empty form values do not overwrite existing config values.
 - **Branch switching** in the Repositories context menu: all local branches (up to 15) appear
   as "Switch to `<branch>`" items. Switching runs `git checkout` and refreshes the list.
 - **Clone Repository** top-level command: a search-as-you-type page that accepts any Git URL
