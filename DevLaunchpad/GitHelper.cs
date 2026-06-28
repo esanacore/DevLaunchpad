@@ -216,6 +216,154 @@ internal static class GitHelper
         return baseUrl;
     }
 
+    /// <summary>
+    /// Reads the commit hash for <paramref name="refPath"/> (relative to <c>.git</c>,
+    /// e.g. <c>refs/heads/main</c>) from the loose ref file, falling back to
+    /// <c>packed-refs</c>. Returns <c>null</c> when the ref cannot be resolved.
+    /// </summary>
+    internal static string? ReadRefHash(string repoPath, string refPath)
+    {
+        try
+        {
+            // 1. Loose ref file.
+            string loosePath = Path.Combine(repoPath, ".git", refPath.Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(loosePath))
+            {
+                string content = File.ReadAllText(loosePath).Trim();
+                return content.Length == 40 ? content : null;
+            }
+
+            // 2. packed-refs: plain text, one "<40-char-hash> <ref>" line per entry.
+            string packedRefsPath = Path.Combine(repoPath, ".git", "packed-refs");
+            if (!File.Exists(packedRefsPath))
+            {
+                return null;
+            }
+
+            foreach (string line in File.ReadAllLines(packedRefsPath))
+            {
+                if (line.Length == 0 || line[0] == '#' || line[0] == '^')
+                {
+                    continue;
+                }
+
+                int space = line.IndexOf(' ');
+                if (space == 40 && line.Length > 41 &&
+                    line[(space + 1)..].TrimEnd().Equals(refPath, StringComparison.Ordinal))
+                {
+                    return line[..40];
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"ReadRefHash failed for '{repoPath}' ref '{refPath}': {ex}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns the commit hash the local branch points to, or <c>null</c> if unavailable.
+    /// </summary>
+    public static string? GetLocalBranchHash(string repoPath, string branch)
+        => ReadRefHash(repoPath, $"refs/heads/{branch}");
+
+    /// <summary>
+    /// Returns the commit hash for <c>origin/<paramref name="branch"/></c>, or <c>null</c>
+    /// when no remote-tracking ref exists.
+    /// </summary>
+    public static string? GetRemoteTrackingHash(string repoPath, string branch)
+        => ReadRefHash(repoPath, $"refs/remotes/origin/{branch}");
+
+    /// <summary>
+    /// Returns the name of any in-progress git operation ("merge", "cherry-pick", "rebase"),
+    /// or <c>null</c> when the working tree is in a normal state.
+    /// </summary>
+    internal static string? GetSpecialState(string repoPath)
+    {
+        try
+        {
+            string gitDir = Path.Combine(repoPath, ".git");
+
+            if (File.Exists(Path.Combine(gitDir, "MERGE_HEAD")))
+            {
+                return "merge";
+            }
+            if (File.Exists(Path.Combine(gitDir, "CHERRY_PICK_HEAD")))
+            {
+                return "cherry-pick";
+            }
+            if (File.Exists(Path.Combine(gitDir, "REBASE_HEAD")) ||
+                Directory.Exists(Path.Combine(gitDir, "rebase-merge")) ||
+                Directory.Exists(Path.Combine(gitDir, "rebase-apply")))
+            {
+                return "rebase";
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"GetSpecialState failed for '{repoPath}': {ex}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the repository appears dirty.
+    ///
+    /// <para><b>Limitations (filesystem-only, no process spawn):</b></para>
+    /// <list type="bullet">
+    ///   <item>In-progress operations (merge, rebase, cherry-pick) are detected accurately.</item>
+    ///   <item>Staged changes are inferred by comparing the modification time of
+    ///         <c>.git/index</c> against the loose branch ref: a newer index means something
+    ///         was staged since the last commit. Only works when the branch ref is a loose
+    ///         file; packed-refs lack the necessary mtime.</item>
+    ///   <item>Unstaged changes to tracked files are <em>not</em> detected.</item>
+    /// </list>
+    /// </summary>
+    public static bool IsDirty(string repoPath, string? branch)
+    {
+        try
+        {
+            if (GetSpecialState(repoPath) is not null)
+            {
+                return true;
+            }
+
+            if (branch is null)
+            {
+                return false;
+            }
+
+            string indexPath = Path.Combine(repoPath, ".git", "index");
+            if (!File.Exists(indexPath))
+            {
+                return false;
+            }
+
+            // Build the path to the loose branch ref, handling slash-separated branch names
+            // like "feature/my-branch" on all platforms.
+            string[] branchParts = branch.Split('/');
+            string refFilePath = Path.Combine([repoPath, ".git", "refs", "heads", .. branchParts]);
+
+            if (!File.Exists(refFilePath))
+            {
+                // Branch is in packed-refs; mtime comparison unavailable.
+                return false;
+            }
+
+            return File.GetLastWriteTimeUtc(indexPath) > File.GetLastWriteTimeUtc(refFilePath);
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"IsDirty failed for '{repoPath}': {ex}");
+            return false;
+        }
+    }
+
     internal static string? NormalizeRemoteUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))

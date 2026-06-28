@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using DevLaunchpad.Tests.Helpers;
 using Xunit;
+using System;
 
 namespace DevLaunchpad.Tests;
 
@@ -137,6 +138,78 @@ public sealed class RepoScannerTests : IDisposable
 
         Assert.Single(results);
         Assert.Null(results[0].ProjectType);
+    }
+
+    // ── GitStatus population ─────────────────────────────────────────
+
+    private const string Hash1 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    private const string Hash2 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+    [Fact]
+    public void Scan_GitStatus_InSync_WhenHashesMatch()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: "main");
+        _temp.WriteRef(repo, "refs/heads/main", Hash1);
+        _temp.WriteRef(repo, "refs/remotes/origin/main", Hash1);
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.True(results[0].GitStatus.HasRemote);
+        Assert.True(results[0].GitStatus.IsInSync);
+        Assert.False(results[0].GitStatus.IsDirty);
+    }
+
+    [Fact]
+    public void Scan_GitStatus_OutOfSync_WhenHashesDiffer()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: "main");
+        _temp.WriteRef(repo, "refs/heads/main", Hash1);
+        _temp.WriteRef(repo, "refs/remotes/origin/main", Hash2);
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.True(results[0].GitStatus.HasRemote);
+        Assert.False(results[0].GitStatus.IsInSync);
+    }
+
+    [Fact]
+    public void Scan_GitStatus_NoRemote_WhenNoTrackingRef()
+    {
+        _temp.CreateSubRepo("repo", branch: "main");
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.False(results[0].GitStatus.HasRemote);
+        Assert.False(results[0].GitStatus.IsInSync);
+    }
+
+    [Fact]
+    public void Scan_GitStatus_Dirty_WhenMergeHeadPresent()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: "main");
+        _temp.WriteSpecialStateMarker(repo, "MERGE_HEAD");
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.True(results[0].GitStatus.IsDirty);
+    }
+
+    [Fact]
+    public void Scan_GitStatus_Dirty_WhenIndexNewerThanRef()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: "main");
+        var refTime = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        _temp.WriteRef(repo, "refs/heads/main", Hash1, mtime: refTime);
+        _temp.WriteIndex(repo, lastWriteUtc: refTime.AddMinutes(5));
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.True(results[0].GitStatus.IsDirty);
     }
 
     [Fact]

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace DevLaunchpad.Tests.Helpers;
 
@@ -72,6 +74,56 @@ internal sealed class TempGitRepo : IDisposable
         string path = Path.Combine(RootPath, relativePath);
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    /// <summary>
+    /// Writes a loose ref file under <c>.git/<paramref name="refPath"/></c>,
+    /// optionally setting its modification time.
+    /// </summary>
+    public void WriteRef(string repoPath, string refPath, string hash, DateTime? mtime = null)
+    {
+        string fullPath = Path.Combine(repoPath, ".git", refPath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.WriteAllText(fullPath, hash + "\n");
+        if (mtime.HasValue)
+        {
+            File.SetLastWriteTimeUtc(fullPath, mtime.Value);
+        }
+    }
+
+    /// <summary>
+    /// Writes a <c>packed-refs</c> file with the given ref/hash pairs.
+    /// </summary>
+    public void WritePackedRefs(string repoPath, IEnumerable<(string refPath, string hash)> refs)
+    {
+        var sb = new StringBuilder("# pack-refs with: peeled fully-peeled sorted\n");
+        foreach (var (refPath, hash) in refs)
+        {
+            sb.Append(hash).Append(' ').AppendLine(refPath);
+        }
+        File.WriteAllText(Path.Combine(repoPath, ".git", "packed-refs"), sb.ToString());
+    }
+
+    /// <summary>
+    /// Writes the <c>.git/index</c> file, optionally setting its modification time.
+    /// </summary>
+    public void WriteIndex(string repoPath, DateTime? lastWriteUtc = null)
+    {
+        string indexPath = Path.Combine(repoPath, ".git", "index");
+        File.WriteAllBytes(indexPath, Array.Empty<byte>());
+        if (lastWriteUtc.HasValue)
+        {
+            File.SetLastWriteTimeUtc(indexPath, lastWriteUtc.Value);
+        }
+    }
+
+    /// <summary>
+    /// Writes a sentinel file that marks an in-progress git operation,
+    /// e.g. <c>MERGE_HEAD</c>, <c>CHERRY_PICK_HEAD</c>, <c>REBASE_HEAD</c>.
+    /// </summary>
+    public void WriteSpecialStateMarker(string repoPath, string fileName)
+    {
+        File.WriteAllText(Path.Combine(repoPath, ".git", fileName), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
     }
 
     public void Dispose()

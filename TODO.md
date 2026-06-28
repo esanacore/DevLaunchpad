@@ -8,7 +8,7 @@ This file is the living roadmap for Dev Launchpad.
   - [x] Read-only branch/remote inspection (no process spawn) via `GitHelper`
   - [x] Repository tech-stack detection (`ProjectTypeDetector`) shown in the list and searchable
   - [x] Quick links (Issues, Pull/Merge Requests) and Copy Clone Command for GitHub/GitLab/Bitbucket
-  - [ ] Dirty/ahead-behind status indicators
+  - [x] Dirty/ahead-behind status indicators (`↕` out-of-sync with remote, `*` staged changes or mid-operation)
 - [x] Search and filtering for large repository lists (also filters by tech stack)
 - [x] Recent items tracking
 - [ ] Theme support

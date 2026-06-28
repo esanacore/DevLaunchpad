@@ -151,15 +151,22 @@ public sealed partial class RepoPage : DynamicListPage
         };
     }
 
-    // Builds the list subtitle as a metadata prefix (branch, project type) followed by the path,
-    // e.g. "[main]  (Rust)  C:\src\my-repo".
+    // Builds the list subtitle as a metadata prefix (branch + status, project type) followed
+    // by the path, e.g. "[main ↕ *]  (Rust)  C:\src\my-repo".
+    //   ↕  = local and remote tracking hashes differ (needs push or pull)
+    //   *  = staged changes or mid-merge/rebase/cherry-pick
     private static string BuildSubtitle(RepoEntry repo)
     {
         var tags = new List<string>();
 
         if (repo.Branch is not null)
         {
-            tags.Add($"[{repo.Branch}]");
+            string branchLabel = repo.Branch;
+            if (repo.GitStatus.HasRemote && !repo.GitStatus.IsInSync)
+                branchLabel += " ↕";
+            if (repo.GitStatus.IsDirty)
+                branchLabel += " *";
+            tags.Add($"[{branchLabel}]");
         }
 
         if (repo.ProjectType is not null)

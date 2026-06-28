@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Dirty/ahead-behind status indicators** in the Repositories list: `↕` appears in the branch
+  tag when the local commit hash differs from the remote-tracking hash (needs push or pull);
+  `*` appears when staged changes or an in-progress operation (merge, rebase, cherry-pick) is
+  detected. Both compose: `[main ↕ *]`. Detection is filesystem-only with no process spawn;
+  unstaged-only changes are not detected (see `docs/TEST_PLAN.md` gap log).
 - **Repository tech-stack detection**: each repository is tagged with its primary stack
   (.NET, Node, Rust, Go, Python, Java, Dart, Ruby, PHP, Docker) inferred from root marker files
   (`*.sln`/`*.csproj`, `package.json`, `Cargo.toml`, `go.mod`, etc.) by a new read-only

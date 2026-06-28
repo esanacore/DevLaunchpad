@@ -58,12 +58,20 @@ internal static class RepoScanner
         {
             if (Directory.Exists(Path.Combine(currentPath, ".git")))
             {
+                string? branch = GitHelper.GetCurrentBranch(currentPath);
+                string? localHash = branch is not null ? GitHelper.GetLocalBranchHash(currentPath, branch) : null;
+                string? remoteHash = branch is not null ? GitHelper.GetRemoteTrackingHash(currentPath, branch) : null;
+
                 results.Add(new RepoEntry(
                     Path.GetRelativePath(repoRoot, currentPath),
                     currentPath,
-                    GitHelper.GetCurrentBranch(currentPath),
+                    branch,
                     GitHelper.GetRemoteWebUrl(currentPath),
-                    ProjectTypeDetector.Detect(currentPath)));
+                    ProjectTypeDetector.Detect(currentPath),
+                    new RepoGitStatus(
+                        IsDirty: GitHelper.IsDirty(currentPath, branch),
+                        HasRemote: remoteHash is not null,
+                        IsInSync: localHash is not null && remoteHash is not null && localHash == remoteHash)));
                 return;
             }
 
@@ -98,4 +106,13 @@ internal readonly record struct RepoEntry(
     string FullPath,
     string? Branch,
     string? WebUrl,
-    string? ProjectType);
+    string? ProjectType,
+    RepoGitStatus GitStatus);
+
+/// <summary>
+/// Lightweight git status snapshot derived entirely from filesystem reads (no process spawn).
+/// </summary>
+internal readonly record struct RepoGitStatus(
+    bool IsDirty,      // has staged changes or is mid-merge/rebase/cherry-pick
+    bool HasRemote,    // a remote-tracking branch exists for origin/<branch>
+    bool IsInSync);    // local commit hash matches the remote-tracking hash
