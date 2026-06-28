@@ -40,6 +40,14 @@ public sealed partial class DevToolsPage : ListPage
             {
                 Title = "Open Terminal",
                 Subtitle = $"Launch {config.TerminalCommand}"
+            },
+
+            new ListItem(new SafeInvokableCommand(
+                "Terminal in Projects Root",
+                () => ProcessLauncher.OpenInTerminal(config.RepoRoot)))
+            {
+                Title = "Terminal in Projects Root",
+                Subtitle = $"Open terminal at {config.RepoRoot}"
             }
         ];
     }

@@ -228,4 +228,27 @@ public sealed class RepoScannerTests : IDisposable
         Assert.Single(results);
         Assert.Contains("actual-repo", results[0].DisplayName);
     }
+
+    [Fact]
+    public void Scan_GitStatus_StashCount_Zero_WhenNoStash()
+    {
+        _temp.CreateSubRepo("repo", branch: "main");
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.Equal(0, results[0].GitStatus.StashCount);
+    }
+
+    [Fact]
+    public void Scan_GitStatus_StashCount_PopulatedFromLog()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: "main");
+        _temp.WriteStashLog(repo, 2);
+
+        var results = RepoScanner.Scan(_temp.RootPath);
+
+        Assert.Single(results);
+        Assert.Equal(2, results[0].GitStatus.StashCount);
+    }
 }

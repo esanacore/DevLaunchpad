@@ -71,6 +71,14 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
             },
 
             new CommandItem(
+                title: "Clone Repository",
+                subtitle: "Clone a Git repository by URL into your projects folder"
+            )
+            {
+                Command = new CloneRepoPage()
+            },
+
+            new CommandItem(
                 title: "Custom Commands",
                 subtitle: "Run your configured custom commands"
             )

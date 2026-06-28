@@ -72,6 +72,22 @@ public sealed partial class CustomCommandsPage : ListPage
                         Subtitle = entry.Target
                     });
                     break;
+
+                case "wsl-command":
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.RunWslCommand(entry.Target, entry.Arguments)))
+                    {
+                        Title = entry.Title,
+                        Subtitle = BuildSubtitle("wsl: " + entry.Target, entry.Arguments)
+                    });
+                    break;
+
+                case "ssh":
+                    items.Add(new ListItem(new SafeInvokableCommand(entry.Title, () => ProcessLauncher.OpenSshSession(entry.Target)))
+                    {
+                        Title = entry.Title,
+                        Subtitle = $"ssh {entry.Target}"
+                    });
+                    break;
             }
         }
 

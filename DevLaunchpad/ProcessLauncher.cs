@@ -130,6 +130,145 @@ internal static class ProcessLauncher
         return Start(startInfo);
     }
 
+    /// <summary>
+    /// Runs a git command in <paramref name="workingDirectory"/>, waits up to 30 seconds for it
+    /// to finish, and surfaces errors as a toast. Suitable for quick operations like
+    /// <c>git checkout</c>.
+    /// </summary>
+    public static CommandResult RunGit(string workingDirectory, string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(workingDirectory))
+        {
+            return CommandResult.ShowToast("No repository path available.");
+        }
+
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+            };
+
+            using var process = Process.Start(psi);
+            if (process is null)
+            {
+                return CommandResult.ShowToast("Could not start git.");
+            }
+
+            string stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit(30_000);
+
+            if (process.ExitCode != 0 && !string.IsNullOrWhiteSpace(stderr))
+            {
+                DevLaunchpadConfig.WriteDebugLog(
+                    $"git {arguments} in '{workingDirectory}' exited {process.ExitCode}: {stderr.Trim()}");
+                return CommandResult.ShowToast($"git error: {stderr.Trim()}");
+            }
+
+            return CommandResult.Dismiss();
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"RunGit failed '{arguments}' in '{workingDirectory}': {ex}");
+            return CommandResult.ShowToast($"Could not run git: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Starts a git command in <paramref name="workingDirectory"/> without waiting for it to
+    /// finish. Suitable for long-running operations like <c>git clone</c>.
+    /// </summary>
+    public static CommandResult RunGitBackground(string workingDirectory, string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(workingDirectory))
+        {
+            return CommandResult.ShowToast("No working directory configured.");
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            });
+
+            return CommandResult.ShowToast("Git operation started in the background.");
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"RunGitBackground failed '{arguments}' in '{workingDirectory}': {ex}");
+            return CommandResult.ShowToast($"Could not start git: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Launches a WSL command in a new terminal window via <c>wsl.exe</c>.
+    /// </summary>
+    public static CommandResult RunWslCommand(string wslCommand, string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(wslCommand))
+        {
+            return CommandResult.ShowToast("No WSL command configured.");
+        }
+
+        string wslArgs = string.IsNullOrWhiteSpace(arguments)
+            ? $"-- {wslCommand}"
+            : $"-- {wslCommand} {arguments}";
+
+        return Start(new ProcessStartInfo
+        {
+            FileName = "wsl.exe",
+            Arguments = wslArgs,
+            UseShellExecute = true,
+        });
+    }
+
+    /// <summary>
+    /// Opens an SSH session to <paramref name="host"/> in the configured terminal.
+    /// For Windows Terminal, the session runs inside a new tab via <c>wt -- ssh host</c>;
+    /// for other terminals, <c>ssh</c> is launched directly.
+    /// </summary>
+    public static CommandResult OpenSshSession(string host)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return CommandResult.ShowToast("No SSH host configured.");
+        }
+
+        var config = DevLaunchpadConfig.Load();
+
+        if (string.IsNullOrWhiteSpace(config.TerminalCommand))
+        {
+            return CommandResult.ShowToast("No terminal command configured.");
+        }
+
+        if (IsWindowsTerminal(config.TerminalCommand))
+        {
+            return Start(new ProcessStartInfo
+            {
+                FileName = config.TerminalCommand,
+                Arguments = $"-- ssh {host}",
+                UseShellExecute = true,
+            });
+        }
+
+        return Start(new ProcessStartInfo
+        {
+            FileName = "ssh",
+            Arguments = host,
+            UseShellExecute = true,
+        });
+    }
+
     internal static bool IsWindowsTerminal(string terminalCommand)
     {
         string exe = Path.GetFileNameWithoutExtension(terminalCommand).ToLowerInvariant();

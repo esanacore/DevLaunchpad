@@ -126,6 +126,32 @@ internal sealed class TempGitRepo : IDisposable
         File.WriteAllText(Path.Combine(repoPath, ".git", fileName), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
     }
 
+    /// <summary>
+    /// Writes a <c>.git/logs/refs/stash</c> reflog with <paramref name="entryCount"/> fake entries.
+    /// Each line represents one stash entry (one line = one <c>git stash push</c>).
+    /// </summary>
+    public void WriteStashLog(string repoPath, int entryCount)
+    {
+        string stashLogPath = Path.Combine(repoPath, ".git", "logs", "refs", "stash");
+        Directory.CreateDirectory(Path.GetDirectoryName(stashLogPath)!);
+        const string hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        var sb = new StringBuilder();
+        for (int i = 0; i < entryCount; i++)
+        {
+            sb.AppendLine($"{hash} {hash} Test User <test@example.com> 1000000000 +0000\tWIP on main: {i} stash");
+        }
+        File.WriteAllText(stashLogPath, sb.ToString());
+    }
+
+    /// <summary>
+    /// Creates a loose ref file for a local branch under <c>.git/refs/heads/</c>,
+    /// allowing <see cref="GitHelper.GetLocalBranches"/> to discover it.
+    /// </summary>
+    public void WriteLocalBranch(string repoPath, string branchName, string hash)
+    {
+        WriteRef(repoPath, $"refs/heads/{branchName}", hash);
+    }
+
     public void Dispose()
     {
         try

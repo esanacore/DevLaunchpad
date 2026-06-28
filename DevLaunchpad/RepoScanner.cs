@@ -71,7 +71,8 @@ internal static class RepoScanner
                     new RepoGitStatus(
                         IsDirty: GitHelper.IsDirty(currentPath, branch),
                         HasRemote: remoteHash is not null,
-                        IsInSync: localHash is not null && remoteHash is not null && localHash == remoteHash)));
+                        IsInSync: localHash is not null && remoteHash is not null && localHash == remoteHash,
+                        StashCount: GitHelper.GetStashCount(currentPath))));
                 return;
             }
 
@@ -115,4 +116,5 @@ internal readonly record struct RepoEntry(
 internal readonly record struct RepoGitStatus(
     bool IsDirty,      // has staged changes or is mid-merge/rebase/cherry-pick
     bool HasRemote,    // a remote-tracking branch exists for origin/<branch>
-    bool IsInSync);    // local commit hash matches the remote-tracking hash
+    bool IsInSync,     // local commit hash matches the remote-tracking hash
+    int StashCount);   // number of stash entries (0 = none)

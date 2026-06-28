@@ -258,4 +258,119 @@ public sealed class GitHelperStatusTests : IDisposable
 
         Assert.True(GitHelper.IsDirty(repo, "feature/my-feature"));
     }
+
+    // ── GetStashCount ────────────────────────────────────────────────
+
+    [Fact]
+    public void GetStashCount_NoStashLog_ReturnsZero()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+
+        Assert.Equal(0, GitHelper.GetStashCount(repo));
+    }
+
+    [Fact]
+    public void GetStashCount_OneEntry_ReturnsOne()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WriteStashLog(repo, 1);
+
+        Assert.Equal(1, GitHelper.GetStashCount(repo));
+    }
+
+    [Fact]
+    public void GetStashCount_ThreeEntries_ReturnsThree()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WriteStashLog(repo, 3);
+
+        Assert.Equal(3, GitHelper.GetStashCount(repo));
+    }
+
+    // ── GetLocalBranches ─────────────────────────────────────────────
+
+    [Fact]
+    public void GetLocalBranches_NoBranches_ReturnsEmpty()
+    {
+        string repo = _temp.CreateSubRepo("repo", branch: null);
+
+        Assert.Empty(GitHelper.GetLocalBranches(repo));
+    }
+
+    [Fact]
+    public void GetLocalBranches_SingleLooseRef_ReturnsBranch()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WriteLocalBranch(repo, "main", Hash1);
+
+        var branches = GitHelper.GetLocalBranches(repo);
+
+        Assert.Single(branches);
+        Assert.Equal("main", branches[0]);
+    }
+
+    [Fact]
+    public void GetLocalBranches_MultipleLooseRefs_ReturnsSorted()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WriteLocalBranch(repo, "feature/b", Hash1);
+        _temp.WriteLocalBranch(repo, "feature/a", Hash2);
+        _temp.WriteLocalBranch(repo, "main", Hash1);
+
+        var branches = GitHelper.GetLocalBranches(repo);
+
+        Assert.Equal(3, branches.Count);
+        Assert.Equal("feature/a", branches[0]);
+        Assert.Equal("feature/b", branches[1]);
+        Assert.Equal("main", branches[2]);
+    }
+
+    [Fact]
+    public void GetLocalBranches_PackedRefsBranch_IsIncluded()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WritePackedRefs(repo, [("refs/heads/old-branch", Hash1)]);
+
+        var branches = GitHelper.GetLocalBranches(repo);
+
+        Assert.Single(branches);
+        Assert.Equal("old-branch", branches[0]);
+    }
+
+    [Fact]
+    public void GetLocalBranches_PackedAndLoose_DeduplicatesAndSorts()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WriteLocalBranch(repo, "main", Hash1);
+        // Same branch also in packed-refs (as would happen after git gc)
+        _temp.WritePackedRefs(repo,
+        [
+            ("refs/heads/main", Hash1),
+            ("refs/heads/old-feature", Hash2),
+        ]);
+
+        var branches = GitHelper.GetLocalBranches(repo);
+
+        // "main" should appear only once
+        Assert.Equal(2, branches.Count);
+        Assert.Equal("main", branches[0]);
+        Assert.Equal("old-feature", branches[1]);
+    }
+
+    [Fact]
+    public void GetLocalBranches_RemoteRefsExcluded()
+    {
+        string repo = _temp.CreateSubRepo("repo");
+        _temp.WritePackedRefs(repo,
+        [
+            ("refs/heads/main", Hash1),
+            ("refs/remotes/origin/main", Hash2),
+        ]);
+
+        var branches = GitHelper.GetLocalBranches(repo);
+
+        // Only refs/heads/ should appear
+        Assert.Single(branches);
+        Assert.Equal("main", branches[0]);
+    }
 }

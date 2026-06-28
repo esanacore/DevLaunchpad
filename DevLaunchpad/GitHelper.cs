@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace DevLaunchpad;
 
@@ -362,6 +362,90 @@ internal static class GitHelper
             DevLaunchpadConfig.WriteDebugLog($"IsDirty failed for '{repoPath}': {ex}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Returns the number of stash entries in the repository, or 0 when there is no stash.
+    /// Counts non-empty lines in <c>.git/logs/refs/stash</c> (one line per stash entry).
+    /// </summary>
+    public static int GetStashCount(string repoPath)
+    {
+        try
+        {
+            string stashLogPath = Path.Combine(repoPath, ".git", "logs", "refs", "stash");
+            if (!File.Exists(stashLogPath))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (string line in File.ReadAllLines(stashLogPath))
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"GetStashCount failed for '{repoPath}': {ex}");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Returns a sorted list of all local branch names, combining loose ref files under
+    /// <c>.git/refs/heads/</c> with any branches packed in <c>packed-refs</c>.
+    /// </summary>
+    public static List<string> GetLocalBranches(string repoPath)
+    {
+        var branches = new HashSet<string>(StringComparer.Ordinal);
+
+        try
+        {
+            string headsDir = Path.Combine(repoPath, ".git", "refs", "heads");
+            if (Directory.Exists(headsDir))
+            {
+                foreach (string file in Directory.GetFiles(headsDir, "*", SearchOption.AllDirectories))
+                {
+                    string relative = file[headsDir.Length..].TrimStart(Path.DirectorySeparatorChar, '/');
+                    branches.Add(relative.Replace(Path.DirectorySeparatorChar, '/'));
+                }
+            }
+
+            string packedRefsPath = Path.Combine(repoPath, ".git", "packed-refs");
+            if (File.Exists(packedRefsPath))
+            {
+                const string headsPrefix = "refs/heads/";
+                foreach (string line in File.ReadAllLines(packedRefsPath))
+                {
+                    if (line.Length == 0 || line[0] == '#' || line[0] == '^')
+                    {
+                        continue;
+                    }
+
+                    int space = line.IndexOf(' ');
+                    if (space == 40 && line.Length > 41)
+                    {
+                        string refName = line[(space + 1)..].TrimEnd();
+                        if (refName.StartsWith(headsPrefix, StringComparison.Ordinal))
+                        {
+                            branches.Add(refName[headsPrefix.Length..]);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            DevLaunchpadConfig.WriteDebugLog($"GetLocalBranches failed for '{repoPath}': {ex}");
+        }
+
+        var sorted = new List<string>(branches);
+        sorted.Sort(StringComparer.OrdinalIgnoreCase);
+        return sorted;
     }
 
     internal static string? NormalizeRemoteUrl(string url)

@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Stash indicator** in the Repositories list: `~N` appended to the branch tag (e.g.
+  `[main ~2]`) when the repository has stash entries. Count is read from
+  `.git/logs/refs/stash` with no process spawn.
+- **Status-based search filtering**: typing `dirty`, `unsynced`, `ahead`, `behind`, `stashed`,
+  or `stash` in the Repositories search box filters to matching repos based on their git status.
+- **Branch switching** in the Repositories context menu: all local branches (up to 15) appear
+  as "Switch to `<branch>`" items. Switching runs `git checkout` and refreshes the list.
+- **Clone Repository** top-level command: a search-as-you-type page that accepts any Git URL
+  (https, git@, ssh://) and clones into the configured `RepoRoot` as a background process.
+- **Terminal in Projects Root** in Developer Tools: opens the configured terminal directly at
+  the root projects folder.
+- **WSL command type** (`wsl-command`) for Custom Commands: runs a command inside WSL via
+  `wsl.exe -- <command>`.
+- **SSH command type** (`ssh`) for Custom Commands: opens an SSH session in the configured
+  terminal (`wt -- ssh host` for Windows Terminal, raw `ssh host` otherwise).
+- **MaxVersionTested bumped** from `10.0.22621.0` to `10.0.26100.0` in `Package.appxmanifest`
+  to declare Windows 11 24H2 support.
 - **Dirty/ahead-behind status indicators** in the Repositories list: `↕` appears in the branch
   tag when the local commit hash differs from the remote-tracking hash (needs push or pull);
   `*` appears when staged changes or an in-progress operation (merge, rebase, cherry-pick) is

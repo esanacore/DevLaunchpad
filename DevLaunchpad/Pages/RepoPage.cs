@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace DevLaunchpad.Pages;
 
@@ -57,7 +58,8 @@ public sealed partial class RepoPage : DynamicListPage
                 r.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 r.FullPath.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 (r.ProjectType is not null &&
-                 r.ProjectType.Contains(query, StringComparison.OrdinalIgnoreCase)));
+                 r.ProjectType.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                StatusTokens(r.GitStatus).Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
         var ordered = matches
@@ -142,6 +144,30 @@ public sealed partial class RepoPage : DynamicListPage
                 return result;
             })));
 
+        // Branch switching: show other local branches as "Switch to …" context items.
+        var otherBranches = GitHelper.GetLocalBranches(path)
+            .Where(b => !string.Equals(b, repo.Branch, StringComparison.Ordinal))
+            .Take(15)
+            .ToList();
+
+        if (otherBranches.Count > 0)
+        {
+            moreCommands.Add(new Separator());
+            foreach (string branchName in otherBranches)
+            {
+                string captured = branchName;
+                moreCommands.Add(new CommandContextItem(new SafeInvokableCommand(
+                    $"Switch to {captured}",
+                    () =>
+                    {
+                        ProcessLauncher.RunGit(path, $"checkout {captured}");
+                        InvalidateCache();
+                        RaiseItemsChanged(0);
+                        return CommandResult.ShowToast($"Switched to {captured}.");
+                    })));
+            }
+        }
+
         return new ListItem(LaunchCommand("Open in Editor", path, () => ProcessLauncher.OpenInEditor(path)))
         {
             Title = repo.DisplayName,
@@ -152,9 +178,10 @@ public sealed partial class RepoPage : DynamicListPage
     }
 
     // Builds the list subtitle as a metadata prefix (branch + status, project type) followed
-    // by the path, e.g. "[main ↕ *]  (Rust)  C:\src\my-repo".
-    //   ↕  = local and remote tracking hashes differ (needs push or pull)
-    //   *  = staged changes or mid-merge/rebase/cherry-pick
+    // by the path, e.g. "[main ↕ * ~2]  (Rust)  C:\src\my-repo".
+    //   ↕   = local and remote tracking hashes differ (needs push or pull)
+    //   *   = staged changes or mid-merge/rebase/cherry-pick
+    //   ~N  = N stash entries
     private static string BuildSubtitle(RepoEntry repo)
     {
         var tags = new List<string>();
@@ -166,6 +193,8 @@ public sealed partial class RepoPage : DynamicListPage
                 branchLabel += " ↕";
             if (repo.GitStatus.IsDirty)
                 branchLabel += " *";
+            if (repo.GitStatus.StashCount > 0)
+                branchLabel += $" ~{repo.GitStatus.StashCount}";
             tags.Add($"[{branchLabel}]");
         }
 
@@ -175,6 +204,20 @@ public sealed partial class RepoPage : DynamicListPage
         }
 
         return tags.Count == 0 ? repo.FullPath : $"{string.Join("  ", tags)}  {repo.FullPath}";
+    }
+
+    // Returns searchable status keywords for a git status snapshot.
+    // Allows typing "dirty", "unsynced", or "stashed" to filter the list.
+    private static string StatusTokens(RepoGitStatus status)
+    {
+        var sb = new StringBuilder();
+        if (status.IsDirty)
+            sb.Append("dirty ");
+        if (status.HasRemote && !status.IsInSync)
+            sb.Append("unsynced ahead behind ");
+        if (status.StashCount > 0)
+            sb.Append("stashed stash ");
+        return sb.ToString();
     }
 
     // Wraps a launch so the repository is recorded as recently used before it opens.
@@ -195,6 +238,15 @@ public sealed partial class RepoPage : DynamicListPage
 
     private static bool IsPinned(List<string> pinned, string path)
         => pinned.Any(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+
+    private void InvalidateCache()
+    {
+        lock (_cacheLock)
+        {
+            _cache = null;
+            _cachedRoot = string.Empty;
+        }
+    }
 
     private List<RepoEntry> GetRepos(string repoRoot)
     {
