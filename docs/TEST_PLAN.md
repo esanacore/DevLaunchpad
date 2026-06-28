@@ -29,7 +29,7 @@ headless testing, so coverage is focused on extracted, framework-independent log
 | `ConfigDefaultsTests.cs` | Default config generation and field validity |
 | `ConfigLogicTests.cs` | Config load/save, recent-repo tracking, pinning, reset |
 | `ConfigSerializationTests.cs` | JSON round-trip and AOT source-generated context |
-| `DevLaunchpadSettingsTests.cs` | `DevLaunchpadSettings` config-seeding bridge |
+| `DevLaunchpadSettingsTests.cs` | `DevLaunchpadSettings` config seeding and write-back bridge |
 | `GitHelperTests.cs` | Branch parsing, remote URL detection, clone command, Issues/PR URL derivation |
 | `ProcessLauncherConfigTests.cs` | Config-driven process launcher behavior |
 | `ProcessLauncherTests.cs` | Input validation guard paths and `IsWindowsTerminal` detection |
@@ -60,6 +60,7 @@ record snapshots here.
 | Date | Overall coverage | Notes |
 | --- | --- | --- |
 | 2026-06-27 | ~unknown~ | Baseline not yet measured; coverage tooling not wired into CI |
+| 2026-06-27 | Not measured | Added focused `DevLaunchpadSettings` write-back regression coverage; no coverage collector run |
 
 ## Coverage Gap Log
 
@@ -68,5 +69,5 @@ record snapshots here.
 | GAP-001 | `RepoPage` — live search, pinning, context menu actions | Med | Open | TODO: Increase test coverage for page implementations |
 | GAP-002 | `ConfigPage` — open/reload/reset actions | Med | Open | TODO: Increase test coverage for page implementations |
 | GAP-003 | `DevToolsPage`, `LocalServersPage`, `FavoriteWebsitesPage`, `CustomCommandsPage` | Low | Open | TODO: Increase test coverage for page implementations |
-| GAP-004 | `DevLaunchpadSettings.OnSettingsChanged` write-back path | Med | Open | TODO: Cover the `DevLaunchpadSettings` write-back path |
+| GAP-004 | `DevLaunchpadSettings.OnSettingsChanged` write-back path | Med | Closed | Covered by `DevLaunchpadSettingsTests.PersistCurrentSettings_WritesFormValuesToConfig` and blank-value guard test |
 | GAP-005 | CI coverage reporting — no automated gate exists | Low | Open | Wire `--collect:"XPlat Code Coverage"` into the CI workflow |

@@ -37,8 +37,8 @@ This file is the living roadmap for Dev Launchpad.
 - [ ] Increase test coverage for page implementations (`RepoPage`, `ConfigPage`, etc.). These are
       currently untested because they bind directly to the Command Palette UI toolkit; extracting
       their logic (as was done for `RepoScanner`) would make them testable.
-- [ ] Cover the `DevLaunchpadSettings` write-back path (`OnSettingsChanged` persistence), which is
-      event-driven and not exercised by the current seeding tests.
+- [x] Cover the `DevLaunchpadSettings` write-back path (`OnSettingsChanged` persistence), including
+      blank-value handling for the settings form bridge.
 
 ## Documentation
 

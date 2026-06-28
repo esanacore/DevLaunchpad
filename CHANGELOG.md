@@ -94,6 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed NETSDK1097 build error by adding RuntimeIdentifier
 - Fixed missing functionality exposure in CommandsProvider
+- Added regression coverage for the in-palette Settings write-back path, including blank-value
+  handling so empty form values do not overwrite existing config values.
 - Guarded all `Process.Start` calls so a missing editor/terminal/target no longer throws out of
   the COM server
 - Removed dead template page (`DevLaunchpadPage`) that shipped a "TODO" placeholder item
