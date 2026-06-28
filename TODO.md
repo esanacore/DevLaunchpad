@@ -39,6 +39,11 @@ This file is the living roadmap for Dev Launchpad.
 - [ ] Add screenshots to README.md.
 - [ ] Icon customization per page/command (document how-to).
 
+## Tooling
+
+- [x] Adopt gstack (optional mode) for AI-assisted contributor workflows; recommended install documented in `CLAUDE.md`.
+- [ ] Decide whether to enforce gstack via team "required" mode (adds a PreToolUse install-check hook that blocks work without gstack) or keep it optional.
+
 ## Nice-to-Have
 
 - [ ] Export/import configuration profiles.
