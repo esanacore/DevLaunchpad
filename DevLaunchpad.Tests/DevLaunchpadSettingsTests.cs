@@ -4,9 +4,9 @@ using Xunit;
 namespace DevLaunchpad.Tests;
 
 /// <summary>
-/// Tests for <see cref="DevLaunchpadSettings"/>, the bridge that seeds the in-palette settings
-/// form from <c>config.json</c>. Exercises the read path (form is populated from the persisted
-/// config) using an isolated temp config directory.
+/// Tests for <see cref="DevLaunchpadSettings"/>, the bridge that syncs the in-palette settings
+/// form with <c>config.json</c>. Exercises the read and write paths using an isolated temp
+/// config directory.
 /// </summary>
 [Collection(ConfigStateCollection.Name)]
 public sealed class DevLaunchpadSettingsTests : IDisposable
@@ -53,5 +53,53 @@ public sealed class DevLaunchpadSettingsTests : IDisposable
         Assert.Equal(@"C:\Projects", settings.Settings.GetSetting<string>(RepoRootKey));
         Assert.Equal("code", settings.Settings.GetSetting<string>(EditorKey));
         Assert.Equal("wt", settings.Settings.GetSetting<string>(TerminalKey));
+    }
+
+    [Fact]
+    public void PersistCurrentSettings_WritesFormValuesToConfig()
+    {
+        var settings = new DevLaunchpadSettings();
+        settings.Settings.Update(
+            """
+            {
+              "repoRoot": "D:\\Repos",
+              "editorCommand": "vim",
+              "terminalCommand": "pwsh"
+            }
+            """);
+
+        settings.PersistCurrentSettings();
+
+        var config = DevLaunchpadConfig.Load();
+        Assert.Equal(@"D:\Repos", config.RepoRoot);
+        Assert.Equal("vim", config.EditorCommand);
+        Assert.Equal("pwsh", config.TerminalCommand);
+    }
+
+    [Fact]
+    public void PersistCurrentSettings_IgnoresBlankFormValues()
+    {
+        var config = DevLaunchpadConfig.Load();
+        config.RepoRoot = @"E:\Existing";
+        config.EditorCommand = "code-insiders";
+        config.TerminalCommand = "wt";
+        config.Save();
+
+        var settings = new DevLaunchpadSettings();
+        settings.Settings.Update(
+            """
+            {
+              "repoRoot": "   ",
+              "editorCommand": "",
+              "terminalCommand": "pwsh"
+            }
+            """);
+
+        settings.PersistCurrentSettings();
+
+        var reloaded = DevLaunchpadConfig.Load();
+        Assert.Equal(@"E:\Existing", reloaded.RepoRoot);
+        Assert.Equal("code-insiders", reloaded.EditorCommand);
+        Assert.Equal("pwsh", reloaded.TerminalCommand);
     }
 }

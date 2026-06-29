@@ -55,6 +55,11 @@ public sealed class DevLaunchpadSettings
 
     private void OnSettingsChanged(object sender, Settings args)
     {
+        PersistCurrentSettings();
+    }
+
+    internal void PersistCurrentSettings()
+    {
         try
         {
             var config = DevLaunchpadConfig.Load();
