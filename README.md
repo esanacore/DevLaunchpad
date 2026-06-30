@@ -55,6 +55,7 @@ DevLaunchpad/
 - **Favorite Websites**: Bookmark and quickly open frequently used sites
 - **Custom Commands**: Execute configurable commands (URLs, folders, executables, terminal sessions)
 - **Configuration Management**: JSON-based config with auto-reload and debug logging
+- **Configuration Backup**: Export `config.json` snapshots before upgrades, sideload tests, or Store installs
 
 ## Quick Start
 
@@ -169,6 +170,7 @@ Comprehensive configuration management:
 - **Open Config in Editor**: Edit with configured editor
 - **Open Debug Log**: View configuration and error logs
 - **Reload Config**: Apply changes without restarting
+- **Export Config Backup**: Copy the current `config.json` into a timestamped backup file
 - **Reset to Defaults**: Restore default configuration
 
 ## Security Notes
@@ -308,6 +310,7 @@ custom commands) are still edited in `config.json`.
 1. **Via Extension**:
    - Open Dev Launchpad → Configuration
    - Select "Open Config File in Editor"
+   - Select "Export Config Backup" before sideloading or testing Store packages
 
 2. **Manual Edit**:
    - Navigate to config folder (shown in Configuration page)

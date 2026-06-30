@@ -70,6 +70,15 @@ and trust it.)
 
 ## 5. Validate before you submit (recommended)
 
+The unit test suite includes `StoreReadinessCheckerTests`, which verifies the repo
+still contains the package manifest, Store guide, privacy policy, x64/arm64
+publish profiles, required manifest identity fields, and the `runFullTrust`
+capability needed by the Command Palette COM server:
+
+```powershell
+dotnet test DevLaunchpad.Tests/DevLaunchpad.Tests.csproj --filter "FullyQualifiedName~StoreReadinessCheckerTests" --nologo -v q
+```
+
 Run the **Windows App Certification Kit** (WACK) locally against a built package:
 
 ```powershell

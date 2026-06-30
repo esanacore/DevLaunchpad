@@ -52,5 +52,7 @@ This file is the living roadmap for Dev Launchpad.
 
 ## Nice-to-Have
 
-- [ ] Export/import configuration profiles.
+- [x] Export configuration backup snapshots from the Configuration page.
+- [ ] Import configuration backup snapshots from the Configuration page.
+- [ ] Add a contributor-facing command or CI job that runs `StoreReadinessChecker` outside the test suite.
 - [ ] Telemetry: Anonymous usage analytics (opt-in).

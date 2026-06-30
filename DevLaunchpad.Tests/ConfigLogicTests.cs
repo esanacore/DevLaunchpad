@@ -93,6 +93,34 @@ public sealed class ConfigLogicTests : IDisposable
         Assert.NotNull(result);
     }
 
+    [Fact]
+    public void ExportConfigBackup_CopiesCurrentConfigToBackupsFolder()
+    {
+        var config = DevLaunchpadConfig.Load();
+        config.RepoRoot = @"D:\Work";
+        config.Save();
+
+        DevLaunchpadConfig.ExportConfigBackup();
+
+        string backupRoot = Path.Combine(_configDir.DirectoryPath, "backups");
+        string backupPath = Assert.Single(Directory.GetFiles(backupRoot, "config-*.json"));
+        string backupJson = File.ReadAllText(backupPath);
+
+        Assert.Contains(@"""RepoRoot"": ""D:\\Work""", backupJson);
+    }
+
+    [Fact]
+    public void ExportConfigBackup_CanRunTwiceWithoutOverwriting()
+    {
+        DevLaunchpadConfig.Load();
+
+        DevLaunchpadConfig.ExportConfigBackup();
+        DevLaunchpadConfig.ExportConfigBackup();
+
+        string backupRoot = Path.Combine(_configDir.DirectoryPath, "backups");
+        Assert.Equal(2, Directory.GetFiles(backupRoot, "config-*.json").Length);
+    }
+
     // ── RecordRecentRepo ────────────────────────────────────────────
 
     [Fact]

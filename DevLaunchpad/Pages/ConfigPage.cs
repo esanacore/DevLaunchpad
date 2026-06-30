@@ -87,6 +87,12 @@ public sealed partial class ConfigPage : ListPage
                 Subtitle = "Reload config.json from disk"
             },
 
+            new ListItem(new SafeInvokableCommand("Export Config Backup", DevLaunchpadConfig.ExportConfigBackup))
+            {
+                Title = "Export Config Backup",
+                Subtitle = "Copy config.json into the backups folder before upgrades or Store testing"
+            },
+
             new ListItem(new SafeInvokableCommand("Reset Config to Defaults", DevLaunchpadConfig.ResetToDefaults))
             {
                 Title = "Reset Config to Defaults",

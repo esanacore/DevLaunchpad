@@ -76,6 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when qualifying code is changed (`.cs`/`.csproj`/`.sln`/`.props`/`.targets`/`.appxmanifest` or a
   workflow file) without a matching `README.md` update; `docs/` changes and the workflow file
   itself are exempt, and draft PRs are skipped
+- **Export Config Backup** action on the Configuration page. It copies the current `config.json`
+  into a timestamped `backups` folder so users can preserve settings before upgrades,
+  sideload testing, or Store package validation.
+- **Store readiness checker** coverage that verifies the repo has the MSIX manifest, Store guide,
+  privacy policy, x64/arm64 publish profiles, manifest identity fields, and the required
+  `runFullTrust` capability before submission.
 
 ### Changed
 - Package manifest cleaned up for Store submission: real publisher identity placeholders
@@ -96,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing functionality exposure in CommandsProvider
 - Added regression coverage for the in-palette Settings write-back path, including blank-value
   handling so empty form values do not overwrite existing config values.
+- Added focused tests for configuration backup export and Store readiness checks.
 - Guarded all `Process.Start` calls so a missing editor/terminal/target no longer throws out of
   the COM server
 - Removed dead template page (`DevLaunchpadPage`) that shipped a "TODO" placeholder item
