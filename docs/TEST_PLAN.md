@@ -35,6 +35,7 @@ headless testing, so coverage is focused on extracted, framework-independent log
 | `ProcessLauncherTests.cs` | Input validation guard paths and `IsWindowsTerminal` detection |
 | `ProjectTypeDetectorTests.cs` | Tech-stack inference from marker files, priority ordering |
 | `RepoScannerTests.cs` | Git repository discovery, depth bounding, project-type population |
+| `StoreReadinessCheckerTests.cs` | MSIX manifest, Store documentation, privacy policy, publish profiles, and `runFullTrust` readiness |
 
 ### Test Helpers
 
@@ -61,6 +62,7 @@ record snapshots here.
 | --- | --- | --- |
 | 2026-06-27 | ~unknown~ | Baseline not yet measured; coverage tooling not wired into CI |
 | 2026-06-27 | Not measured | Added focused `DevLaunchpadSettings` write-back regression coverage; no coverage collector run |
+| 2026-06-30 | Not measured | Added config backup export and Store readiness checker coverage; focused and full test suites run without coverage collector |
 
 ## Coverage Gap Log
 
@@ -71,3 +73,4 @@ record snapshots here.
 | GAP-003 | `DevToolsPage`, `LocalServersPage`, `FavoriteWebsitesPage`, `CustomCommandsPage` | Low | Open | TODO: Increase test coverage for page implementations |
 | GAP-004 | `DevLaunchpadSettings.OnSettingsChanged` write-back path | Med | Closed | Covered by `DevLaunchpadSettingsTests.PersistCurrentSettings_WritesFormValuesToConfig` and blank-value guard test |
 | GAP-005 | CI coverage reporting — no automated gate exists | Low | Open | Wire `--collect:"XPlat Code Coverage"` into the CI workflow |
+| GAP-006 | Store readiness checker is covered by unit tests but not exposed as a standalone contributor command | Low | Open | Add a contributor-facing command or CI job that runs `StoreReadinessChecker` outside the test suite |

@@ -318,6 +318,26 @@ public sealed class DevLaunchpadConfig
         return CommandResult.ShowToast("Configuration reloaded from disk.");
     }
 
+    public static CommandResult ExportConfigBackup()
+    {
+        string configPath = GetConfigPath();
+        EnsureDefaultConfigExists(configPath);
+
+        string backupDirectory = Path.Combine(GetConfigDirectory(), "backups");
+        Directory.CreateDirectory(backupDirectory);
+
+        string backupStem = $"config-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
+        string backupPath = Path.Combine(backupDirectory, $"{backupStem}.json");
+        for (int suffix = 1; File.Exists(backupPath); suffix++)
+        {
+            backupPath = Path.Combine(backupDirectory, $"{backupStem}-{suffix}.json");
+        }
+
+        File.Copy(configPath, backupPath, overwrite: false);
+        WriteDebugLog($"Config backup exported to: {backupPath}");
+        return CommandResult.ShowToast("Configuration backup exported.");
+    }
+
     private static string GetDefaultConfigJson()
     {
         return """
