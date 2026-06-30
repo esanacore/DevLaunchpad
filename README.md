@@ -236,7 +236,8 @@ You don't have to hand-edit JSON for the common options. Open the **Settings** c
 gear in the Command Palette extension manager) to edit the **repository root**, **editor command**,
 and **terminal command** directly in-palette. Changes are saved straight back to `config.json`, so
 the form and the file always agree. The list-based options (local servers, favorite websites,
-custom commands) are still edited in `config.json`.
+custom commands) are still edited in `config.json`. Blank or whitespace-only values are ignored, so
+leaving a field empty does not overwrite an existing saved setting.
 
 > **Tip:** The **Repositories** page supports live search — start typing to filter discovered
 > repos by name or path.
