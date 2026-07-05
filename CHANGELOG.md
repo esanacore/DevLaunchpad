@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Constitution governance CI workflows for compliance, version drift, declared-test execution, and doc freshness.
 - **Stash indicator** in the Repositories list: `~N` appended to the branch tag (e.g.
   `[main ~2]`) when the repository has stash entries. Count is read from
   `.git/logs/refs/stash` with no process spawn.
@@ -84,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `runFullTrust` capability before submission.
 
 ### Changed
+- Pinned the `constitution/` submodule to the current `1.30.0` framework baseline while the release tag catches up.
 - Package manifest cleaned up for Store submission: real publisher identity placeholders
   (`Eric Sanacore` instead of `Microsoft Corporation` / `A Lone Developer`), a descriptive
   tile description, version bumped to `1.0.0.0`, and `MaxVersionTested` raised to `10.0.22621.0`

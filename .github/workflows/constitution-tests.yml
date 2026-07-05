@@ -1,0 +1,36 @@
+name: Constitution Test Runner
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-runner:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Confirm constitution submodule is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -e constitution/scripts/run_declared_tests.sh ]; then
+            echo "::error::No 'constitution/' submodule found (or it is too old to ship the test runner)."
+            exit 1
+          fi
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Run declared test command
+        shell: bash
+        run: bash constitution/scripts/run_declared_tests.sh .

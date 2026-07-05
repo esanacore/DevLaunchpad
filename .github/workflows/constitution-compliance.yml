@@ -1,0 +1,42 @@
+name: Constitution Compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compliance-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Confirm constitution submodule is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -e constitution/scripts/check_compliance.sh ]; then
+            echo "::error::No 'constitution/' submodule found (or it is too old to ship the compliance checker)."
+            exit 1
+          fi
+
+      - name: Verify required governance files are present
+        shell: bash
+        run: bash constitution/scripts/check_compliance.sh .
+
+      - name: Verify requirements traceability
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash constitution/scripts/check_traceability.sh \
+            docs/PRODUCT_REQUIREMENTS.md docs/REQUIREMENTS_TRACEABILITY.md

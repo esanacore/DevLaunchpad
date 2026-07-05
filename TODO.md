@@ -49,6 +49,7 @@ This file is the living roadmap for Dev Launchpad.
 
 - [x] Adopt gstack (optional mode) for AI-assisted contributor workflows; recommended install documented in `CLAUDE.md`.
 - [ ] Decide whether to enforce gstack via team "required" mode (adds a PreToolUse install-check hook that blocks work without gstack) or keep it optional.
+- [ ] Decide whether the legacy `readme-update-check.yml` should remain once the Constitution doc-freshness tripwire has enough signal history.
 
 ## Nice-to-Have
 
