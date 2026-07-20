@@ -17,10 +17,12 @@ DevLaunchpad/
 │   ├── DevLaunchpadConfig.cs       # Configuration management
 │   ├── RepoScanner.cs              # Git repository discovery (bounded recursive scan)
 │   ├── GitHelper.cs               # Branch/remote/clone-URL inspection (no process spawn)
+│   ├── GitHubSync.cs              # Builds the bulk clone/pull PowerShell script (gh CLI)
 │   ├── ProjectTypeDetector.cs     # Tech-stack inference from repo marker files
 │   ├── DevLaunchpadJsonContext.cs  # JSON serialization (AOT-compatible)
 │   ├── Pages/                      # Feature implementations
 │   │   ├── RepoPage.cs            # Git repository browser (live search, branch, pins, context menu)
+│   │   ├── SyncReposPage.cs       # Bulk clone/pull of all your GitHub repos (gh CLI)
 │   │   ├── DevToolsPage.cs        # Developer tools launcher
 │   │   ├── LocalServersPage.cs    # Local URL management
 │   │   ├── FavoriteWebsitesPage.cs # Website bookmarks
@@ -50,6 +52,8 @@ DevLaunchpad/
 
 - **Repository Management**: Automatically discover and access Git repositories, each tagged with
   its current branch and detected tech stack (.NET, Node, Rust, Go, Python, …)
+- **Bulk GitHub Sync**: Clone every GitHub repository you can access (and fast-forward-pull the
+  ones you already have) into your projects folder with a single command, powered by the GitHub CLI
 - **Developer Tools**: Quick launch for VS Code, PowerShell, Windows Terminal
 - **Local Servers**: One-click access to localhost development URLs
 - **Favorite Websites**: Bookmark and quickly open frequently used sites
@@ -107,11 +111,13 @@ Once published, install directly from the Microsoft Store. See
 
 1. Open Command Palette: Press `Win+Alt+Space`
 2. Type "Dev Launchpad" or "dev"
-3. You'll see 6 main commands:
+3. You'll see the main commands:
    - Repositories
    - Developer Tools
    - Local Servers
    - Favorite Websites
+   - Clone Repository
+   - Sync All GitHub Repos
    - Custom Commands
    - Configuration
 
@@ -138,6 +144,22 @@ Once published, install directly from the Microsoft Store. See
     **Open Issues** and **Open Pull/Merge Requests**
   - **Pin/Unpin** to float a repo to the top of the list
 - Displays relative paths from repo root for easy navigation
+
+### 🔄 Sync All GitHub Repos (`SyncReposPage`)
+Bulk-clone and update every GitHub repository you can access, into your configured `RepoRoot`:
+- **Sync All GitHub Repositories**: generates a PowerShell script and runs it in a visible terminal
+  window so you can watch progress. For each repository, it **clones** if the folder is missing or
+  **fast-forward-pulls** (`git pull --ff-only`) if it already exists — mirroring the common
+  `gh repo list … | while read` shell loop. The script verifies the GitHub CLI, `git`, and your
+  authentication before starting, keeps going past individual failures, and prints a
+  `Cloned N, updated N, failed N` summary at the end.
+- **Copy Sync Script**: copies the generated PowerShell script to the clipboard so you can review it
+  or run it yourself.
+- **Open Projects Folder**: opens `RepoRoot` in Explorer.
+
+> **Requirements:** the [GitHub CLI](https://cli.github.com) (`gh`) must be installed and
+> authenticated (`gh auth login`), and `git` must be on your `PATH`. Dev Launchpad does not store
+> any credentials — authentication is handled entirely by `gh`.
 
 ### 🛠️ Developer Tools (`DevToolsPage`)
 Quick launch for common development applications:

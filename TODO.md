@@ -15,6 +15,8 @@ This file is the living roadmap for Dev Launchpad.
   - [x] Stash count indicator (`~N`) in branch tag; reads `.git/logs/refs/stash`
   - [x] Branch switching from context menu (up to 15 local branches; runs `git checkout`)
   - [x] Clone Repository top-level command (paste URL → clone into RepoRoot in background)
+  - [x] Sync All GitHub Repos command (bulk clone new + `pull --ff-only` existing via `gh`, run in a
+        visible terminal). Follow-up: optional owner/org scoping and a dry-run/preview mode.
 - [x] Search and filtering for large repository lists (also filters by tech stack, dirty/unsynced/stashed)
 - [x] Recent items tracking
 - [ ] Theme support

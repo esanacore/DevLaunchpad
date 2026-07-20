@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sync All GitHub Repos** top-level command: bulk-clones every GitHub repository the authenticated
+  user can access into the configured `RepoRoot` and fast-forward-pulls (`git pull --ff-only`) the
+  ones already present. The action generates a PowerShell script (`GitHubSync.BuildSyncScript`) and
+  runs it in a visible terminal window so progress stays watchable; the script verifies the GitHub
+  CLI (`gh`), `git`, and authentication up front, continues past individual failures, and prints a
+  cloned/updated/failed summary. The page also offers **Copy Sync Script** (to review or run the
+  script manually) and **Open Projects Folder**. Requires `gh` (authenticated via `gh auth login`)
+  and `git` on `PATH`; no credentials are stored by the extension. Covered by `GitHubSyncTests`
+  (script content and repository-limit handling) and `ProcessLauncher` guard-path tests.
 - **Stash indicator** in the Repositories list: `~N` appended to the branch tag (e.g.
   `[main ~2]`) when the repository has stash entries. Count is read from
   `.git/logs/refs/stash` with no process spawn.
