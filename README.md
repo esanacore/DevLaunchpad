@@ -201,6 +201,16 @@ Contributions are welcome! To contribute:
 
 See `CHANGELOG.md` for recent changes and version history.
 
+### Continuous Integration
+
+Every pull request and push to `main` runs the `.NET`, `MSIX`, and `Constitution
+*` workflows under `.github/workflows/`. The `constitution-*` workflows (and a
+daily schedule) verify the pinned `constitution/` submodule stays current and
+that this repository keeps the governance files, secrets hygiene, and
+declared-test command the Constitution expects; see
+[`engineering-constitution`](https://github.com/esanacore/engineering-constitution)
+for what each check does.
+
 ## Technology Stack
 
 - **.NET 9** (Windows App SDK)
