@@ -211,6 +211,33 @@ internal static class ProcessLauncher
     }
 
     /// <summary>
+    /// Runs a PowerShell script in a new, visible console window so the user can watch progress of
+    /// a long-running operation (e.g. bulk cloning). The window stays open after the script exits
+    /// (<c>-NoExit</c>) so results remain readable. The script runs with
+    /// <paramref name="workingDirectory"/> as its working directory.
+    /// </summary>
+    public static CommandResult RunPowerShellScriptVisible(string scriptPath, string workingDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(scriptPath) || !File.Exists(scriptPath))
+        {
+            return CommandResult.ShowToast("Sync script not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(workingDirectory) || !Directory.Exists(workingDirectory))
+        {
+            return CommandResult.ShowToast($"Folder not found: {workingDirectory}");
+        }
+
+        return Start(new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = $"-NoExit -ExecutionPolicy Bypass -File \"{scriptPath}\"",
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = true,
+        });
+    }
+
+    /// <summary>
     /// Launches a WSL command in a new terminal window via <c>wsl.exe</c>.
     /// </summary>
     public static CommandResult RunWslCommand(string wslCommand, string arguments)

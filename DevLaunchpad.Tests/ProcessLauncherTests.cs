@@ -92,6 +92,45 @@ public sealed class ProcessLauncherTests
         Assert.NotNull(result);
     }
 
+    // ── RunPowerShellScriptVisible ──────────────────────────────────
+
+    [Fact]
+    public void RunPowerShellScriptVisible_NullScriptPath_ReturnsToast()
+    {
+        var result = ProcessLauncher.RunPowerShellScriptVisible(null!, ".");
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void RunPowerShellScriptVisible_MissingScript_ReturnsToast()
+    {
+        var result = ProcessLauncher.RunPowerShellScriptVisible(
+            @"C:\This\Script\Does\Not\Exist\12345.ps1",
+            ".");
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void RunPowerShellScriptVisible_MissingWorkingDirectory_ReturnsToast()
+    {
+        // Use a real existing file as the script so the guard we exercise is the directory check.
+        string scriptPath = Path.GetTempFileName();
+        try
+        {
+            var result = ProcessLauncher.RunPowerShellScriptVisible(
+                scriptPath,
+                @"C:\This\Folder\Does\Not\Exist\12345");
+
+            Assert.NotNull(result);
+        }
+        finally
+        {
+            File.Delete(scriptPath);
+        }
+    }
+
     // ── IsWindowsTerminal ───────────────────────────────────────────
 
     [Theory]

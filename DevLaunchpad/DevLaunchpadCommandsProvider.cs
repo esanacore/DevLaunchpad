@@ -79,6 +79,14 @@ public sealed partial class DevLaunchpadCommandsProvider : CommandProvider
             },
 
             new CommandItem(
+                title: "Sync All GitHub Repos",
+                subtitle: "Clone new and fast-forward-pull existing GitHub repos into your projects folder"
+            )
+            {
+                Command = new SyncReposPage()
+            },
+
+            new CommandItem(
                 title: "Custom Commands",
                 subtitle: "Run your configured custom commands"
             )
