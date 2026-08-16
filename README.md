@@ -355,11 +355,13 @@ leaving a field empty does not overwrite an existing saved setting.
 
 ## Screenshots
 
-[Add screenshots here showing the extension in action]
+> Screenshots live in `docs/images/`. Drop the PNGs in using the exact filenames below and
+> they appear here automatically. See [`docs/images/SCREENSHOTS.md`](docs/images/SCREENSHOTS.md)
+> for the capture spec (dimensions and what each shot should show).
 
-- Main menu
-- Repository browser
-- Configuration page
-- Custom commands in action
-
-Screenshots and design assets are stored in `docs/images/`.
+| | |
+|---|---|
+| ![Dev Launchpad main menu in the Command Palette](docs/images/main-menu.png) | ![Repository browser with branch and tech-stack tags](docs/images/repositories.png) |
+| **Main menu** — top-level commands in the Command Palette | **Repositories** — branch, tech stack, and live search |
+| ![Sync All GitHub Repos actions](docs/images/sync-repos.png) | ![Configuration page](docs/images/configuration.png) |
+| **Sync All GitHub Repos** — bulk clone / fast-forward pull | **Configuration** — settings, backup, and reload |

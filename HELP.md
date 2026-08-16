@@ -4,9 +4,10 @@ This file provides help for humans and AI agents working on this project.
 
 ## For Humans
 
-- **Primary Maintainers**: <!-- Add names or team here -->
+- **Primary Maintainers**: Eric Sanacore ([@esanacore](https://github.com/esanacore)).
 - **Getting Started**: Read `README.md` and `docs/SETUP.md`.
-- **Asking for Help**: <!-- Add Slack channel, email, or issue tracker link here -->
+- **Asking for Help**: Open an issue at
+  [github.com/esanacore/DevLaunchpad/issues](https://github.com/esanacore/DevLaunchpad/issues).
 
 ## For AI Agents
 

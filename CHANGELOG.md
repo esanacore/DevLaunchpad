@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-16
+
 ### Added
 - **Sync All GitHub Repos** top-level command: bulk-clones every GitHub repository the authenticated
   user can access into the configured `RepoRoot` and fast-forward-pulls (`git pull --ff-only`) the
@@ -91,11 +93,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Store readiness checker** coverage that verifies the repo has the MSIX manifest, Store guide,
   privacy policy, x64/arm64 publish profiles, manifest identity fields, and the required
   `runFullTrust` capability before submission.
+- **Version-consistency check** in `StoreReadinessChecker`: the readiness report now fails when the
+  `VERSION` file and the manifest `Identity/@Version` disagree, so the app version cannot silently
+  drift between the two before a release. Covered by `StoreReadinessCheckerTests`.
 
 ### Changed
+- **Privacy policy** (`docs/PRIVACY.md`) updated to accurately describe that user-initiated actions
+  (branch switching, Clone Repository, and Sync All GitHub Repos) invoke `git`/`gh` on your behalf,
+  which may contact remote servers per your own configuration and credentials. The extension itself
+  still declares no network capability, stores no credentials, and has no telemetry.
 - Package manifest cleaned up for Store submission: real publisher identity placeholders
   (`Eric Sanacore` instead of `Microsoft Corporation` / `A Lone Developer`), a descriptive
-  tile description, version bumped to `1.0.0.0`, and `MaxVersionTested` raised to `10.0.22621.0`
+  tile description, and the package version and `MaxVersionTested` fields finalized for Store
+  submission
 - Dropped the unused `internetClient` capability (the extension makes no network calls of its own)
 - Configuration and debug log now stored in the persistent `LocalFolder` instead of the
   purgeable `LocalCacheFolder`
@@ -123,11 +133,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made config-touching tests run sequentially via a shared xUnit collection, eliminating races on
   the process-wide `ConfigDirectoryOverride` static
 
+### Removed
+- Stale internal `docs/DOCUMENTATION_SUMMARY.md` scaffolding (it referenced pre-LICENSE placeholders
+  and an unrelated repository, and had drifted out of sync with the current docs).
+
 ### Security
 - Configuration stored in Windows packaged app storage (LocalFolder)
 - No credentials stored in configuration files
 
-## [0.0.1.0] - 2025-01-XX
+## [0.0.1.0] - 2026-03-06
 
 ### Added
 - Initial project structure
@@ -135,5 +149,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PowerToys Command Palette integration
 - COM server registration
 
-[Unreleased]: https://github.com/esanacore/DevLaunchpad/compare/v0.0.1.0...HEAD
+[Unreleased]: https://github.com/esanacore/DevLaunchpad/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/esanacore/DevLaunchpad/compare/v0.0.1.0...v1.2.0
 [0.0.1.0]: https://github.com/esanacore/DevLaunchpad/releases/tag/v0.0.1.0
