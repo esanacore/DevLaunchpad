@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: 2026-06-06_
+_Last updated: 2026-08-16_
 
 Dev Launchpad ("the extension") is a Microsoft PowerToys Command Palette extension
 that helps you launch repositories, developer tools, and local servers.
@@ -30,12 +30,28 @@ removes them.
 
 ## What the extension does *not* do
 
-- It does **not** declare any network capability and makes no outbound network
-  requests itself.
-- It does **not** collect usage analytics or telemetry.
-- It does **not** read repository contents. To show the current branch it reads
-  only the local `.git/HEAD` and `.git/config` files; it never runs `git` or
-  contacts a remote.
+- It does **not** declare any network capability, and the extension process itself
+  makes no outbound network requests, collects no usage analytics, and sends no
+  telemetry.
+- It does **not** read the *contents* of your repositories. The repository list
+  shows each repo's branch and status by reading local `.git` metadata files
+  (e.g. `.git/HEAD`, `.git/config`) directly, without running `git`.
+- It does **not** store, transmit, or handle any credentials, tokens, or passwords.
+
+## Actions that run git or the GitHub CLI
+
+Some actions you can choose *do* invoke external command-line tools on your behalf:
+
+- **Switch branch** runs `git checkout` in the selected repository.
+- **Clone Repository** runs `git clone` for the URL you provide.
+- **Sync All GitHub Repos** runs the GitHub CLI (`gh`) and `git` to list, clone, and
+  fast-forward-pull your repositories.
+
+These tools may contact remote servers (such as GitHub) using **your own** existing
+`git`/`gh` configuration and credentials. Dev Launchpad does not supply, store, or
+transmit those credentials — authentication and any resulting network activity are
+handled entirely by `git`/`gh` under your account, exactly as if you had run the
+command yourself in a terminal.
 
 ## Launching other applications
 

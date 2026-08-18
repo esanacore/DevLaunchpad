@@ -44,8 +44,23 @@ This file is the living roadmap for Dev Launchpad.
 
 ## Documentation
 
-- [ ] Add screenshots to README.md.
+- [ ] Add screenshots to README.md. *(README gallery + `docs/images/SCREENSHOTS.md` capture spec
+      are wired; awaiting the actual PNGs captured on Windows.)*
 - [ ] Icon customization per page/command (document how-to).
+
+## Microsoft Store Release
+
+In-repo prep is done (version 1.2.0, finalized changelog, accurate privacy policy, filled
+governance docs, `StoreReadinessChecker` version gate). Remaining steps are external and must be
+done from a Windows machine / Partner Center — see [`docs/STORE.md`](docs/STORE.md):
+
+- [ ] Reserve the app name in Partner Center and obtain the identity values.
+- [ ] Stamp the real `Identity/Name` + `Publisher` into `Package.appxmanifest` (do **not** commit
+      real values to the public repo — use VS "Associate App with the Store").
+- [ ] Capture the screenshots in `docs/images/SCREENSHOTS.md` and drop the PNGs into `docs/images/`.
+- [ ] Host `docs/PRIVACY.md` (e.g. GitHub Pages) and enter the privacy-policy URL in the listing.
+- [ ] Fill the Store listing: description, category (Developer tools), support contact.
+- [ ] Build x64 + arm64 MSIX (CI artifacts or local), run WACK, then submit for certification.
 
 ## Tooling
 

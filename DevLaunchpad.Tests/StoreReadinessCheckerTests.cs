@@ -17,6 +17,20 @@ public sealed class StoreReadinessCheckerTests
         Assert.Contains(report.PassedChecks, c => c.Contains("privacy", System.StringComparison.OrdinalIgnoreCase));
         Assert.Contains(report.PassedChecks, c => c.Contains("x64", System.StringComparison.OrdinalIgnoreCase));
         Assert.Contains(report.PassedChecks, c => c.Contains("arm64", System.StringComparison.OrdinalIgnoreCase));
+        // VERSION file and manifest Identity/@Version must agree (see StoreReadinessChecker).
+        Assert.Contains(report.PassedChecks, c => c.Contains("VERSION file and manifest", System.StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("1.2.0", "1.2.0")]
+    [InlineData("1.2.0.0", "1.2.0")]
+    [InlineData("1.2", "1.2.0")]
+    [InlineData("1", "1.0.0")]
+    [InlineData(" 1.2.0 ", "1.2.0")]
+    [InlineData("2.0.1.5", "2.0.1")]
+    public void VersionCore_NormalizesToMajorMinorPatch(string input, string expected)
+    {
+        Assert.Equal(expected, StoreReadinessChecker.VersionCore(input));
     }
 
     [Fact]

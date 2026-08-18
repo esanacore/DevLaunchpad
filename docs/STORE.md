@@ -60,13 +60,15 @@ and trust it.)
 
 1. In Partner Center, create a submission and upload the **x64** and **arm64**
    `.msix` files (the Store accepts multiple architectures in one submission).
-2. Fill in **Store listing**: description, screenshots, category
-   (*Developer tools*), and the **privacy policy URL** (host
-   [`PRIVACY.md`](PRIVACY.md), e.g. via GitHub Pages, and link it).
-3. **Properties → Capabilities**: only `runFullTrust` is declared; expect the
+2. Fill in **Store listing**: description, category (*Developer tools*), a
+   **support contact** (email or the GitHub issues URL), and the **privacy policy
+   URL** (host [`PRIVACY.md`](PRIVACY.md), e.g. via GitHub Pages, and link it).
+3. Add **screenshots** captured per [`images/SCREENSHOTS.md`](images/SCREENSHOTS.md)
+   (at least one; PNG, 1366×768–3840×2160).
+4. **Properties → Capabilities**: only `runFullTrust` is declared; expect the
    restricted-capability review note for `runFullTrust` and explain it is required
    for the out-of-process COM server that PowerToys activates.
-4. Submit for certification.
+5. Submit for certification.
 
 ## 5. Validate before you submit (recommended)
 

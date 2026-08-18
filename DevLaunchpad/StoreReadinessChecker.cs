@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -61,6 +62,7 @@ public static class StoreReadinessChecker
             CheckAttribute(report, identity, "Name", "Manifest identity name is present.");
             CheckAttribute(report, identity, "Publisher", "Manifest publisher is present.");
             CheckAttribute(report, identity, "Version", "Manifest package version is present.");
+            CheckVersionConsistency(report, repoRoot, identity.Attribute("Version")?.Value);
         }
 
         XElement? properties = manifest.Root?.Element(ManifestNs + "Properties");
@@ -102,6 +104,53 @@ public static class StoreReadinessChecker
         {
             report.Failures.Add($"{relativePath} is missing.");
         }
+    }
+
+    /// <summary>
+    /// Verifies the repository-root <c>VERSION</c> file agrees with the manifest
+    /// <c>Identity/@Version</c>. The manifest carries a four-part version (e.g. <c>1.2.0.0</c>)
+    /// while the <c>VERSION</c> file carries the SemVer core (e.g. <c>1.2.0</c>); they must match on
+    /// their first three components so the two sources of truth cannot silently drift.
+    /// </summary>
+    private static void CheckVersionConsistency(StoreReadinessReport report, string repoRoot, string? manifestVersion)
+    {
+        string versionFilePath = Path.Combine(repoRoot, "VERSION");
+        if (!File.Exists(versionFilePath))
+        {
+            report.Failures.Add("VERSION file is missing.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(manifestVersion))
+        {
+            // Absence of the manifest version is already reported by the Version attribute check.
+            return;
+        }
+
+        string fileVersion = File.ReadAllText(versionFilePath).Trim();
+        if (VersionCore(fileVersion) != VersionCore(manifestVersion))
+        {
+            report.Failures.Add(
+                $"VERSION file ('{fileVersion}') and manifest Identity/@Version ('{manifestVersion}') disagree.");
+        }
+        else
+        {
+            report.PassedChecks.Add("VERSION file and manifest package version agree.");
+        }
+    }
+
+    /// <summary>
+    /// Returns the first three dot-separated components of a version string (major.minor.patch),
+    /// padding missing components with <c>0</c>, so <c>1.2</c>, <c>1.2.0</c>, and <c>1.2.0.0</c>
+    /// all normalize to <c>1.2.0</c>.
+    /// </summary>
+    internal static string VersionCore(string version)
+    {
+        string[] parts = version.Trim().Split('.');
+        string Part(int i) => i < parts.Length && int.TryParse(parts[i], out int n)
+            ? n.ToString(CultureInfo.InvariantCulture)
+            : "0";
+        return $"{Part(0)}.{Part(1)}.{Part(2)}";
     }
 
     private static void CheckAttribute(StoreReadinessReport report, XElement element, string name, string successMessage)
