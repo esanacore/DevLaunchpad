@@ -50,9 +50,15 @@ This file is the living roadmap for Dev Launchpad.
 
 ## Microsoft Store Release
 
-In-repo prep is done (version 1.2.0, finalized changelog, accurate privacy policy, filled
-governance docs, `StoreReadinessChecker` version gate). Remaining steps are external and must be
-done from a Windows machine / Partner Center — see [`docs/STORE.md`](docs/STORE.md):
+**Status:** the repo is release-ready at **v1.2.0** — finalized changelog, accurate privacy policy,
+filled governance docs, and a `StoreReadinessChecker` version-consistency gate. The remaining work is
+the external submission (Partner Center + a Windows machine).
+
+**Resume point (to keep going later):** use the `app-store-release` skill, which regenerates a
+private, git-ignored `store-submission/` toolkit — a full submission runbook plus the
+`build-packages.ps1` / `sign-trust-install.ps1` / `validate-package.ps1` / `run-all.ps1` helpers — and
+walks through Partner Center step by step. [`docs/STORE.md`](docs/STORE.md) is the underlying technical
+reference. Remaining external steps:
 
 - [ ] Reserve the app name in Partner Center and obtain the identity values.
 - [ ] Stamp the real `Identity/Name` + `Publisher` into `Package.appxmanifest` (do **not** commit
