@@ -4,6 +4,12 @@ Dev Launchpad ships as a single-project MSIX and is distributed as a **Command
 Palette extension** for Microsoft PowerToys. This document is the checklist for
 getting a build from this repo into the Microsoft Store.
 
+> **Guided, step-by-step submission:** the `app-store-release` skill generates a private,
+> git-ignored `store-submission/` toolkit — a full submission runbook plus the
+> `build-packages.ps1`, `sign-trust-install.ps1`, `validate-package.ps1`, and `run-all.ps1`
+> helpers — and walks through Partner Center. This document is the underlying technical reference
+> those steps build on. Current release status lives in [`../TODO.md`](../TODO.md).
+
 ## 1. Reserve the app in Partner Center
 
 1. Sign in to [Partner Center](https://partner.microsoft.com/dashboard) with a
