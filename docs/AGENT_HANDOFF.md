@@ -2,7 +2,7 @@
 
 This document helps transition work between different AI agent sessions.
 
-1. **Current Status**: The Engineering Constitution v1.4.0 has been installed and partially refined.
+1. **Current Status**: The Engineering Constitution v1.45.0 has been installed and partially refined.
    - README.md has been merged with the constitution section.
    - docs/SETUP.md has been populated with DevLaunchpad-specific instructions.
    - doss/COMMAND_REFERENCE.md has been populated with dotnet build and test commands.
