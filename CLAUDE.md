@@ -24,6 +24,7 @@ Before completing work:
 - Update documentation when needed.
 - Update TODO.md with discovered or completed work.
 - Update CHANGELOG.md for user-facing changes.
+- Keep the demo page current — when a change alters user-facing behavior and the repository has a `demo.html`, update it in the same change; a demo still showing the old behavior is an incomplete change (`constitution/DOCUMENTATION.md`, "Demo Page").
 - Consider security impact.
 - Identify useful follow-up work.
 - Summarize changes and verification.

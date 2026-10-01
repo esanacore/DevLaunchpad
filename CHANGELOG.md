@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Interactive demo page** (`demo.html`, linked from the README): a self-contained, clearly labeled
+  simulation of the Command Palette running Dev Launchpad. It reproduces the real top-level commands,
+  page items, repository search (name, path, stack, and `dirty`/`unsynced`/`stashed` status words),
+  pinned/recent ordering, the repo context menu, clone-URL parsing, the six custom command types and
+  the default `config.json`, which readers can edit live. Nothing is launched: each action writes
+  the command the extension would run to an on-page launch log. No build, network, or backend needed.
+
+### Changed
+- Agent instruction files (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `HELP.md`, `SYSTEM_PROMPT.md`,
+  `COPILOT_INSTRUCTIONS.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/project.mdc`,
+  `.project-rules.md`, `.agent-instructions.md`, `.openhands_instructions`, `.antigravity/instructions.md`)
+  now require keeping `demo.html` current whenever a change alters user-facing behavior.
+
 ## [1.2.0] - 2026-08-16
 
 ### Added

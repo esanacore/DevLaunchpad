@@ -16,6 +16,7 @@ This file provides help for humans and AI agents working on this project.
 - **Command Help**: See `docs/COMMAND_REFERENCE.md`.
 - **Troubleshooting**: See `docs/TROUBLESHOOTING.md`.
 - **Handoffs**: If you are finishing a session, see `docs/AGENT_HANDOFF.md`.
+- **Demo Page**: Keep the demo page current — when a change alters user-facing behavior and the repository has a `demo.html`, update it in the same change; a demo still showing the old behavior is an incomplete change (`constitution/DOCUMENTATION.md`, "Demo Page").
 
 ## Escalation Policy
 

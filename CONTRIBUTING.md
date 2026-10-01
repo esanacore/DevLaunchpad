@@ -250,6 +250,7 @@ public static DevLaunchpadConfig Load()
 
 - Keep README.md up to date
 - Update CHANGELOG.md for all changes
+- Keep the demo page current — when a change alters user-facing behavior and the repository has a `demo.html`, update it in the same change; a demo still showing the old behavior is an incomplete change (`constitution/DOCUMENTATION.md`, "Demo Page").
 - Add XML comments for public APIs
 - Include examples for new features
 

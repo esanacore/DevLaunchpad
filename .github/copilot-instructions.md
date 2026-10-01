@@ -58,4 +58,5 @@ There is no test project yet. The extension is validated by deploying and testin
 
 - Keep PRs focused on a single feature or fix.
 - Update `CHANGELOG.md` for user-facing changes.
+- Keep the demo page current — when a change alters user-facing behavior and the repository has a `demo.html`, update it in the same change; a demo still showing the old behavior is an incomplete change (`constitution/DOCUMENTATION.md`, "Demo Page").
 - Ensure the `.NET` and `MSIX` CI workflows pass before merging.
