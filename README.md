@@ -6,6 +6,14 @@ A Microsoft PowerToys Command Palette extension for managing developer workflows
 [![Eric's Engineering Constitution](https://img.shields.io/badge/Eric's%20Engineering%20Constitution-Adopted-blue)](https://github.com/esanacore/engineering-constitution)
 <!-- CONSTITUTION_END -->
 
+## Demo
+
+**[Try the interactive demo](demo.html)**: a simulated Command Palette session in your browser.
+Search repositories by name, stack or git status, open the repo context menu, clone by URL, run
+the GitHub sync and edit a live `config.json`. Nothing is launched; the page shows the exact
+command each action would run. It is one self-contained HTML file, so open it from a clone with
+no build or network.
+
 ## Project Structure
 
 ```

@@ -7,3 +7,4 @@ This repository follows [Eric's Engineering Constitution](constitution/CONSTITUT
 1. Read `constitution/CONSTITUTION.md` and `constitution/AI_WORKFLOW.md`.
 2. Follow the project conventions in `AGENTS.md`.
 3. Update tests, docs, `TODO.md`, and `CHANGELOG.md` as part of every change.
+4. Keep the demo page current — when a change alters user-facing behavior and the repository has a `demo.html`, update it in the same change; a demo still showing the old behavior is an incomplete change (`constitution/DOCUMENTATION.md`, "Demo Page").

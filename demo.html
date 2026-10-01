@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Launchpad — Interactive Demo</title>
+<meta name="description" content="A simulated PowerToys Command Palette session with the Dev Launchpad extension: search repositories, open the context menu, clone by URL, sync GitHub repos and run custom commands. Nothing is launched.">
+<!--
+  Dev Launchpad demo page (DOCUMENTATION.md, "Demo Page").
+  One self-contained file: no build, no network, no backend. Everything the palette
+  "launches" is simulated and written to the on-page launch log instead.
+  Keep this page in step with DevLaunchpad/Pages/*.cs, ProcessLauncher.cs,
+  DevLaunchpadConfig.cs and GitHubSync.cs when user-facing behavior changes.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f5f8;
+    --surface: #ffffff;
+    --surface-2: #eef0f4;
+    --border: #d8dce4;
+    --text: #1a1d24;
+    --muted: #5b6372;
+    --accent: #0a64c2;
+    --accent-soft: #e2eefb;
+    --warn-bg: #fff4dc;
+    --warn-border: #e2b04a;
+    --warn-text: #5c4307;
+    --ok: #157a3b;
+    --bad: #b42318;
+    --pal-bg: #fbfbfc;
+    --pal-sel: #e7ebf2;
+    --pal-shadow: 0 18px 50px rgba(20, 30, 50, .18), 0 2px 6px rgba(20, 30, 50, .08);
+    --term-bg: #0f1420;
+    --term-text: #d6deeb;
+    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c;
+      --surface: #1a1e27;
+      --surface-2: #222733;
+      --border: #313848;
+      --text: #e9ecf2;
+      --muted: #a0a9b9;
+      --accent: #6cb4ff;
+      --accent-soft: #1c2f47;
+      --warn-bg: #33280f;
+      --warn-border: #a37a22;
+      --warn-text: #f3dca4;
+      --ok: #59c98a;
+      --bad: #ff8a80;
+      --pal-bg: #20242e;
+      --pal-sel: #2e3442;
+      --pal-shadow: 0 18px 50px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
+      --term-bg: #0b0e15;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  main { width: min(100%, 1160px); margin: 0 auto; padding: 32px 16px 64px; }
+  a { color: var(--accent); }
+  code, kbd { font-family: var(--mono); font-size: .88em; }
+  code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  kbd {
+    display: inline-block; padding: 0 5px; border: 1px solid var(--border); border-bottom-width: 2px;
+    border-radius: 4px; background: var(--surface); line-height: 1.5; font-size: .78em;
+  }
+  h1 { margin: 0 0 6px; font-size: clamp(2rem, 5vw, 2.8rem); letter-spacing: -.02em; line-height: 1.1; }
+  h2 { margin: 48px 0 10px; font-size: 1.45rem; letter-spacing: -.01em; }
+  h3 { margin: 0 0 8px; font-size: 1.02rem; }
+  .eyebrow { margin: 0 0 8px; color: var(--muted); font-size: .85rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .tagline { margin: 0 0 18px; max-width: 68ch; color: var(--muted); font-size: 1.08rem; }
+  .lede { max-width: 72ch; color: var(--muted); margin: 0 0 14px; }
+
+  .sim {
+    display: flex; gap: 12px; align-items: flex-start;
+    margin: 0 0 24px; padding: 14px 16px;
+    background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
+    color: var(--warn-text); font-size: .95rem;
+  }
+  @media (max-width: 600px) { .sim { flex-direction: column; gap: 8px; } }
+  .badge {
+    flex: none; display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: var(--warn-border); color: #1b1404; font-size: .72rem; font-weight: 700;
+    letter-spacing: .05em; text-transform: uppercase;
+  }
+
+  .tour { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .tour span { align-self: center; color: var(--muted); font-size: .9rem; margin-right: 4px; }
+  .chip {
+    font: inherit; font-size: .88rem; cursor: pointer;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  .chip:hover, .chip:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+
+  .stage { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- simulated Command Palette ---------- */
+  .palette {
+    position: relative; display: flex; flex-direction: column;
+    height: 540px; background: var(--pal-bg); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: var(--pal-shadow); overflow: hidden;
+  }
+  @media (max-width: 600px) { .palette { height: 500px; } }
+  .pal-label {
+    position: absolute; top: 8px; right: 10px; z-index: 3;
+  }
+  .pal-top { display: flex; align-items: center; gap: 8px; padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+  .pal-back {
+    flex: none; width: 30px; height: 30px; border-radius: 6px; border: 0; cursor: pointer;
+    background: transparent; color: var(--text); display: grid; place-items: center;
+  }
+  .pal-back:hover { background: var(--pal-sel); }
+  .pal-back[hidden] { display: none; }
+  .pal-search { flex: 1; min-width: 0; }
+  .pal-crumb { font-size: .75rem; color: var(--muted); margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 86px; }
+  .pal-input {
+    width: 100%; border: 0; outline: none; background: transparent; color: var(--text);
+    font: inherit; font-size: 1.08rem; padding: 2px 0;
+  }
+  .pal-input::placeholder { color: var(--muted); }
+  .pal-list { flex: 1; overflow-y: auto; padding: 6px; margin: 0; list-style: none; }
+  .item {
+    display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    padding: 7px 8px; border-radius: 6px; cursor: pointer; position: relative;
+  }
+  .item.sel { background: var(--pal-sel); }
+  .item.sel::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--accent); }
+  .item.noop { cursor: default; }
+  .ico { width: 32px; height: 32px; border-radius: 6px; display: grid; place-items: center; background: var(--surface-2); color: var(--accent); }
+  .ico svg { width: 18px; height: 18px; }
+  .it-title { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it-sub { font-size: .8rem; color: var(--muted); white-space: pre; overflow: hidden; text-overflow: ellipsis; font-family: var(--mono); }
+  .more-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px;
+    cursor: pointer; font: inherit; font-size: .8rem; padding: 2px 8px; visibility: hidden;
+  }
+  .item.sel .more-btn { visibility: visible; }
+  .pal-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); background: var(--surface-2);
+  }
+  .pal-foot .acts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+  .pal-foot b { color: var(--text); font-weight: 600; }
+  .menu {
+    position: absolute; right: 10px; bottom: 44px; z-index: 4; width: min(300px, calc(100% - 20px));
+    max-height: 70%; overflow-y: auto; padding: 4px; margin: 0; list-style: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--pal-shadow);
+  }
+  .menu li { padding: 6px 10px; border-radius: 5px; font-size: .9rem; cursor: pointer; }
+  .menu li.sel { background: var(--pal-sel); }
+  .menu li.sep { height: 1px; padding: 0; margin: 4px 6px; background: var(--border); cursor: default; }
+  .menu li.head { font-size: .75rem; color: var(--muted); cursor: default; padding-bottom: 2px; }
+  .toast {
+    position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 5;
+    max-width: calc(100% - 24px); padding: 8px 14px; border-radius: 8px;
+    background: var(--text); color: var(--bg); font-size: .88rem; box-shadow: var(--pal-shadow);
+  }
+  .closed {
+    position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; text-align: center;
+    padding: 24px; background: color-mix(in srgb, var(--bg) 92%, transparent);
+  }
+  .closed p { margin: 0 0 12px; color: var(--muted); max-width: 40ch; }
+  .btn {
+    font: inherit; font-size: .9rem; cursor: pointer; padding: 7px 14px; border-radius: 6px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  }
+  @media (prefers-color-scheme: dark) { .btn { color: #0b1626; } }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .form { padding: 10px 12px; }
+  .form label { display: block; font-weight: 600; font-size: .9rem; margin: 10px 0 2px; }
+  .form .desc { display: block; color: var(--muted); font-size: .8rem; margin-bottom: 4px; }
+  .form input {
+    width: 100%; font: inherit; font-family: var(--mono); font-size: .9rem; padding: 6px 8px;
+    border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  .form .row { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  /* ---------- side panel ---------- */
+  .side { display: grid; gap: 16px; min-width: 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card-head h3 { margin: 0; }
+  .hint { color: var(--muted); font-size: .84rem; margin: 0 0 8px; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; display: grid; gap: 8px; }
+  .log li { border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; font-size: .86rem; min-width: 0; }
+  .log li.toast-entry { border-left-color: var(--muted); }
+  .log li.fail { border-left-color: var(--bad); }
+  .log .what { font-weight: 600; }
+  .log .cmd { display: block; font-family: var(--mono); font-size: .8rem; background: var(--surface-2); padding: 4px 6px; border-radius: 4px; margin-top: 3px; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .log .eff { color: var(--muted); }
+  .log .empty { border: 0; color: var(--muted); padding-left: 0; }
+  .term {
+    margin: 6px 0 0; padding: 8px 10px; border-radius: 6px; background: var(--term-bg); color: var(--term-text);
+    font-family: var(--mono); font-size: .76rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
+    max-height: 220px; overflow-y: auto;
+  }
+  .term .c { color: #7fd1ff; } .term .y { color: #f5d76e; } .term .g { color: #7ee2a0; } .term .r { color: #ff8f8f; }
+  textarea.cfg {
+    width: 100%; height: 300px; resize: vertical; font-family: var(--mono); font-size: .8rem; line-height: 1.45;
+    padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    tab-size: 2;
+  }
+  .status { font-size: .84rem; margin: 6px 0 0; }
+  .status.ok { color: var(--ok); } .status.bad { color: var(--bad); }
+  details.script summary { cursor: pointer; color: var(--accent); font-size: .82rem; margin-top: 4px; }
+
+  /* ---------- explanatory sections ---------- */
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .grid2 ul { margin: 0; padding-left: 20px; }
+  .grid2 li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  ol.steps { padding-left: 22px; } ol.steps li { margin: 6px 0; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: .88rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">PowerToys Command Palette extension · Windows</p>
+    <h1>Dev Launchpad</h1>
+    <p class="tagline">Open repositories, developer apps, local dev servers, bookmarks and your own commands
+      from the PowerToys Command Palette (<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>Space</kbd>), with branch, git status
+      and tech stack shown for every repo.</p>
+  </header>
+
+  <div class="sim" role="note">
+    <span class="badge">Simulated</span>
+    <span><strong>Nothing on your computer is launched.</strong> The palette below is an HTML re-creation of
+      Dev Launchpad's pages, running the extension's search, sorting and command logic re-implemented in
+      JavaScript. The repositories are a fictional sample under <code>C:\Projects</code>, the GitHub account is
+      made up, and the sync terminal output is a scripted transcript. Every action writes what the real extension
+      would run to the <em>launch log</em> instead of running it. The real extension needs Windows and PowerToys
+      (see <a href="#requirements">what it requires</a>).</span>
+  </div>
+
+  <h2 id="try">Try it</h2>
+  <p class="lede">Click into the palette and type. <kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>Enter</kbd> to run the
+    primary action, <kbd>Ctrl</kbd>+<kbd>K</kbd> for more actions, <kbd>Esc</kbd> or <kbd>Backspace</kbd> on an empty
+    search to go back. On a phone, tap an item; tap <b>⋯</b> for more actions.</p>
+
+  <div class="tour" aria-label="Guided scenarios">
+    <span>Try:</span>
+    <button class="chip" data-tour="rust">Search repos by stack: <code>rust</code></button>
+    <button class="chip" data-tour="dirty">Find repos with changes: <code>dirty</code></button>
+    <button class="chip" data-tour="menu">Repo actions (<kbd>Ctrl</kbd>+<kbd>K</kbd>)</button>
+    <button class="chip" data-tour="clone">Clone by URL</button>
+    <button class="chip" data-tour="sync">Sync all GitHub repos</button>
+    <button class="chip" data-tour="custom">Add an <code>ssh</code> custom command</button>
+    <button class="chip" data-tour="root">Point RepoRoot at a subfolder</button>
+  </div>
+
+  <div class="stage">
+    <section class="palette" id="palette" aria-label="Simulated Command Palette">
+      <span class="pal-label badge" title="This palette is a simulation">Simulated</span>
+      <div class="pal-top">
+        <button class="pal-back" id="back" type="button" aria-label="Back" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="pal-search">
+          <p class="pal-crumb" id="crumb">Command Palette</p>
+          <input class="pal-input" id="q" type="text" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="list" role="combobox" aria-expanded="true">
+        </div>
+      </div>
+      <ul class="pal-list" id="list" role="listbox" aria-label="Results"></ul>
+      <ul class="menu" id="menu" role="menu" hidden></ul>
+      <div class="toast" id="toast" role="status" hidden></div>
+      <div class="pal-foot">
+        <span id="foot-left">Dev Launchpad</span>
+        <span class="acts" id="foot-acts"></span>
+      </div>
+      <div class="closed" id="closed" hidden>
+        <div>
+          <p><strong>The palette closed.</strong> Launch commands dismiss Command Palette after starting the
+            process. In real life the app or page in the launch log would now be opening.</p>
+          <button class="btn" id="reopen" type="button">Reopen palette</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="card" aria-labelledby="log-h">
+        <div class="card-head"><h3 id="log-h">Launch log</h3><span class="badge">Simulated</span></div>
+        <p class="hint">What Dev Launchpad would hand to Windows (<code>Process.Start</code>, the clipboard, or a toast). Newest first.</p>
+        <ol class="log" id="log" aria-live="polite"><li class="empty">Nothing launched yet.</li></ol>
+      </section>
+
+      <section class="card" aria-labelledby="cfg-h">
+        <div class="card-head"><h3 id="cfg-h">config.json</h3><span class="badge">Editable</span></div>
+        <p class="hint">The extension's real default <code>config.json</code>. Edit it and the palette follows: every
+          page re-reads the file when it loads its items. Pinning, recent repos and the Settings form write back to it.</p>
+        <textarea class="cfg" id="cfg" spellcheck="false" aria-label="config.json contents" aria-describedby="cfg-status"></textarea>
+        <p class="status ok" id="cfg-status"></p>
+      </section>
+    </div>
+  </div>
+
+  <h2>What is real and what is simulated</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Taken from the extension's code</h3>
+      <ul>
+        <li>The nine top-level commands, every page title, item title, subtitle and toast message.</li>
+        <li>The default <code>config.json</code>, its field names, and how missing or blank entries are skipped.</li>
+        <li>Repository search over name, path, tech stack and the status words <code>dirty</code>, <code>unsynced</code>,
+          <code>ahead</code>, <code>behind</code>, <code>stashed</code>, <code>stash</code>.</li>
+        <li>The subtitle format <code>[branch ↕ * ~N]  (Stack)  path</code> and the ordering: pinned, then recent, then name.</li>
+        <li>The repo context menu, including <em>Open on GitHub</em> vs <em>Open Remote in Browser</em> and
+          <em>Merge Requests</em> for GitLab.</li>
+        <li>Clone URL parsing (<code>https://</code>, <code>git@</code>, <code>ssh://</code>) and the destination path.</li>
+        <li>The six custom command types: <code>url</code>, <code>folder</code>, <code>command</code>,
+          <code>terminal-in-folder</code>, <code>wsl-command</code>, <code>ssh</code>.</li>
+        <li>The exact command lines in the launch log, including <code>wt -d "…"</code> for Windows Terminal.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Simulated for this page</h3>
+      <ul>
+        <li>Nothing is launched, opened, cloned, checked out or copied. The launch log shows what would happen.</li>
+        <li>The repositories, branches, remotes and git status are a fictional sample. The real extension reads them
+          from <code>.git</code> folders on disk.</li>
+        <li>The folders that "exist" are just the sample's. A path outside it gives the real "Folder not found" or
+          "Projects folder not found" result.</li>
+        <li>The <em>Sync All GitHub Repos</em> terminal output is a scripted transcript for a made-up account. The
+          script text shown is the real generated script.</li>
+        <li><code>config.json</code> lives in this page's memory. Reloading the page resets it.</li>
+        <li>Only Dev Launchpad's commands are shown. The real palette lists every installed extension, and it does its
+          own matching on the top-level list.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="requirements">What the real thing requires</h2>
+  <ol class="steps">
+    <li><strong>Windows 10 or 11</strong> (version 19041 or later) with <strong>PowerToys</strong> installed and
+      Command Palette turned on in PowerToys Settings.</li>
+    <li><strong>The extension</strong>, either built and deployed from source with Visual Studio 2022 or later
+      (<code>DevLaunchpad.sln</code>, <kbd>F5</kbd>), or sideloaded from the unsigned x64/arm64 <code>.msix</code> that the
+      <code>MSIX</code> workflow builds (you sign it with a certificate you trust). A Microsoft Store listing is
+      planned but not published yet.</li>
+    <li>In the palette, run <em>Reload extensions</em>, then type <code>dev</code> or a command name.</li>
+    <li>For <em>Sync All GitHub Repos</em>: the GitHub CLI (<code>gh</code>), signed in with <code>gh auth login</code>,
+      and <code>git</code> on <code>PATH</code>. Dev Launchpad stores no credentials.</li>
+    <li>Your settings live in <code>config.json</code> under the package's <code>LocalState\DevLaunchpad</code> folder.
+      The <em>Configuration</em> page shows the exact path.</li>
+  </ol>
+  <p class="lede">See the <a href="README.md">README</a> for installation and the full configuration reference.</p>
+
+  <footer>
+    Dev Launchpad is licensed under the GNU GPL v3.0. This page is a single self-contained file with no network access.
+    It describes the extension as of the commit it ships with.
+  </footer>
+</main>
+
+<!-- The extension's built-in default config.json (DevLaunchpadConfig.GetDefaultConfigJson). Page text, read by the script below. -->
+<pre id="default-config" hidden>{
+  "RepoRoot": "C:\\Projects",
+  "EditorCommand": "code",
+  "TerminalCommand": "wt",
+  "LocalUrls": [
+    {
+      "Title": "Frontend",
+      "Url": "http://localhost:5173"
+    },
+    {
+      "Title": "Backend",
+      "Url": "http://localhost:8000"
+    },
+    {
+      "Title": "React App",
+      "Url": "http://localhost:3000"
+    }
+  ],
+  "FavoriteWebsites": [
+    {
+      "Title": "GitHub",
+      "Url": "https://github.com"
+    },
+    {
+      "Title": "ChatGPT",
+      "Url": "https://chatgpt.com"
+    }
+  ],
+  "CustomCommands": [
+    {
+      "Title": "Open PowerShell",
+      "Type": "command",
+      "Target": "powershell.exe",
+      "Arguments": ""
+    },
+    {
+      "Title": "Open GitHub",
+      "Type": "url",
+      "Target": "https://github.com",
+      "Arguments": ""
+    },
+    {
+      "Title": "Open Projects Folder",
+      "Type": "folder",
+      "Target": "C:\\Projects",
+      "Arguments": ""
+    },
+    {
+      "Title": "Terminal in Projects",
+      "Type": "terminal-in-folder",
+      "Target": "C:\\Projects",
+      "Arguments": ""
+    }
+  ]
+}</pre>
+
+<!-- The script Dev Launchpad generates for "Sync All GitHub Repos" (GitHubSync.BuildSyncScript, default limit 1000). -->
+<pre id="sync-script" hidden># Dev Launchpad - Sync All GitHub Repositories
+# Auto-generated. Clones repositories you do not have locally and fast-forward-pulls the rest.
+#
+# Requirements:
+#   * GitHub CLI (gh)  - https://cli.github.com
+#   * An authenticated session - run 'gh auth login' once.
+#   * git available on PATH.
+#
+# Runs against the current directory (Dev Launchpad launches it in your projects folder).
+
+$ErrorActionPreference = 'Continue'
+
+function Test-ToolPresent([string] $name) {
+    return [bool] (Get-Command $name -ErrorAction SilentlyContinue)
+}
+
+if (-not (Test-ToolPresent 'gh')) {
+    Write-Host 'GitHub CLI (gh) is not installed or not on PATH. See https://cli.github.com.' -ForegroundColor Red
+    exit 1
+}
+if (-not (Test-ToolPresent 'git')) {
+    Write-Host 'git is not installed or not on PATH.' -ForegroundColor Red
+    exit 1
+}
+
+Write-Host 'Checking GitHub CLI authentication...' -ForegroundColor Cyan
+gh auth status 1&gt;$null 2&gt;$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Not signed in to GitHub. Run 'gh auth login' first." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host 'Fetching repository list...' -ForegroundColor Cyan
+$repos = gh repo list --limit 1000 --json nameWithOwner --jq '.[].nameWithOwner'
+if ($LASTEXITCODE -ne 0) {
+    Write-Host 'Failed to list repositories.' -ForegroundColor Red
+    exit 1
+}
+
+$cloned = 0
+$updated = 0
+$failed = 0
+
+foreach ($repo in $repos) {
+    if ([string]::IsNullOrWhiteSpace($repo)) { continue }
+
+    # Local folder matches gh's default clone target: the repository name.
+    $dir = $repo.Split('/')[-1]
+
+    if (Test-Path -Path (Join-Path $dir '.git')) {
+        Write-Host "updating $dir" -ForegroundColor Yellow
+        git -C $dir pull --ff-only
+        if ($LASTEXITCODE -eq 0) { $updated++ } else { $failed++ }
+    }
+    else {
+        Write-Host "cloning $repo" -ForegroundColor Green
+        gh repo clone $repo
+        if ($LASTEXITCODE -eq 0) { $cloned++ } else { $failed++ }
+    }
+}
+
+Write-Host ''
+Write-Host "Done. Cloned $cloned, updated $updated, failed $failed." -ForegroundColor Cyan</pre>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- helpers
+  var $ = function (sel) { return document.querySelector(sel); };
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function blank(s) { return s == null || String(s).trim() === ""; }
+  function lower(s) { return String(s).toLowerCase(); }
+  function has(hay, needle) { return lower(hay).indexOf(lower(needle)) !== -1; }
+  function trimEndSlash(p) { return String(p).replace(/[\\\/]+$/, ""); }
+  function combine(a, b) { a = String(a); return /[\\\/]$/.test(a) ? a + b : a + "\\" + b; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function q(s) { return "\"" + s + "\""; }
+
+  var CONFIG_DIR = "%LOCALAPPDATA%\\Packages\\DevLaunchpad_…\\LocalState\\DevLaunchpad";
+  var CONFIG_PATH = CONFIG_DIR + "\\config.json";
+  var DEBUG_PATH = CONFIG_DIR + "\\debug.log";
+  var DEFAULT_JSON = $("#default-config").textContent;
+  var SYNC_SCRIPT = $("#sync-script").textContent;
+
+  // ---------------------------------------------------------------- icons
+  var ICONS = {
+    repo: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    pin: '<path d="M9 3h6l-1 6 4 3v2H6v-2l4-3z"/><path d="M12 14v7"/>',
+    tools: '<path d="M14 7l3-3 3 3-3 3"/><path d="M17 7L7 17"/><path d="M4 20l3-3"/>',
+    server: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+    star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+    clone: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/>',
+    sync: '<path d="M20 12a8 8 0 0 1-14 5.3"/><path d="M4 12A8 8 0 0 1 18 6.7"/><path d="M18 3v4h-4"/><path d="M6 21v-4h4"/>',
+    bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    sliders: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+    terminal: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/>',
+    code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+    copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
+  };
+  function icon(name) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || ICONS.info) + "</svg>";
+  }
+
+  // ---------------------------------------------------------------- simulated disk
+  // Fictional sample repositories. Branch status mirrors RepoGitStatus:
+  // dirty = staged changes / mid-merge, remote = origin/<branch> exists, sync = hashes match.
+  var BASE = "C:\\Projects";
+  var REPOS = [
+    { rel: "api-gateway", type: ".NET", web: "https://github.com/example-dev/api-gateway", stash: 0, branch: "main",
+      branches: { "main": { dirty: false, remote: true, sync: true }, "feature/rate-limits": { dirty: false, remote: true, sync: false } } },
+    { rel: "web-dashboard", type: "Node", web: "https://github.com/example-dev/web-dashboard", stash: 0, branch: "feature/charts",
+      branches: { "main": { dirty: false, remote: true, sync: true }, "feature/charts": { dirty: true, remote: true, sync: false } } },
+    { rel: "ray-tracer", type: "Rust", web: "https://gitlab.com/example-dev/ray-tracer", stash: 2, branch: "main",
+      branches: { "main": { dirty: false, remote: true, sync: true }, "simd": { dirty: false, remote: false, sync: false } } },
+    { rel: "compose-stack", type: "Docker", web: "https://github.com/example-dev/compose-stack", stash: 0, branch: "main",
+      branches: { "main": { dirty: false, remote: true, sync: true } } },
+    { rel: "dotfiles", type: null, web: null, stash: 1, branch: "main",
+      branches: { "main": { dirty: true, remote: false, sync: false } } },
+    { rel: "tools\\log-shipper", type: "Go", web: "https://bitbucket.org/example-dev/log-shipper", stash: 0, branch: "main",
+      branches: { "main": { dirty: false, remote: true, sync: false }, "release/2.x": { dirty: false, remote: true, sync: true } } },
+    { rel: "ml\\notebook-utils", type: "Python", web: "https://github.com/example-lab/notebook-utils", stash: 0, branch: "dev",
+      branches: { "main": { dirty: false, remote: true, sync: true }, "dev": { dirty: true, remote: false, sync: false } } },
+    { rel: "mobile\\field-app", type: "Dart", web: "https://github.com/example-dev/field-app", stash: 0, branch: "main",
+      branches: { "main": { dirty: false, remote: true, sync: true } } }
+  ];
+  REPOS.forEach(function (r) { r.full = BASE + "\\" + r.rel; });
+
+  function dirExists(path) {
+    if (blank(path)) return false;
+    var p = lower(trimEndSlash(path));
+    if (p === "c:") return true;
+    return REPOS.some(function (r) {
+      var f = lower(r.full);
+      return f === p || f.indexOf(p + "\\") === 0;
+    });
+  }
+
+  // ---------------------------------------------------------------- debug log
+  var debugLines = [];
+  function debug(msg) {
+    var d = new Date();
+    debugLines.push("[" + d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " +
+      pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + "] " + msg);
+    if (debugLines.length > 60) debugLines.shift();
+  }
+
+  // ---------------------------------------------------------------- config (DevLaunchpadConfig)
+  var cfgEl = $("#cfg"), cfgStatus = $("#cfg-status");
+  var FIELD_ORDER = ["RepoRoot", "EditorCommand", "TerminalCommand", "LocalUrls", "FavoriteWebsites", "CustomCommands", "PinnedRepos", "RecentRepos"];
+
+  // new DevLaunchpadConfig(): the property initializers, used when config.json cannot be read.
+  function fallbackConfig() {
+    var d = JSON.parse(DEFAULT_JSON);
+    d.CustomCommands = d.CustomCommands.slice(0, 2);
+    d.PinnedRepos = [];
+    d.RecentRepos = [];
+    return d;
+  }
+
+  function checkType(name, v) {
+    if (v === null) return;
+    var strFields = { RepoRoot: 1, EditorCommand: 1, TerminalCommand: 1 };
+    if (strFields[name]) { if (typeof v !== "string") throw new Error("'" + name + "' must be a string"); return; }
+    if (!Array.isArray(v)) throw new Error("'" + name + "' must be an array");
+    v.forEach(function (e) {
+      if (name === "PinnedRepos" || name === "RecentRepos") {
+        if (e !== null && typeof e !== "string") throw new Error("'" + name + "' entries must be strings");
+        return;
+      }
+      if (e === null || typeof e !== "object" || Array.isArray(e)) throw new Error("'" + name + "' entries must be objects");
+      Object.keys(e).forEach(function (k) {
+        if (e[k] !== null && typeof e[k] !== "string") throw new Error("'" + name + "." + k + "' must be a string");
+      });
+    });
+  }
+
+  var lastBadText = null;
+  function writeConfigText(text) { cfgEl.value = text; }
+
+  // DevLaunchpadConfig.Load(): property names are case-sensitive, unknown ones are ignored,
+  // missing ones keep their defaults, and any parse error falls back to defaults.
+  function load() {
+    var text = cfgEl.value;
+    if (blank(text)) {
+      writeConfigText(DEFAULT_JSON);
+      debug("Default config written successfully to: " + CONFIG_PATH);
+      text = DEFAULT_JSON;
+    }
+    try {
+      var raw = JSON.parse(text);
+      if (raw === null) { writeConfigText(DEFAULT_JSON); raw = JSON.parse(DEFAULT_JSON); }
+      if (typeof raw !== "object" || Array.isArray(raw)) throw new Error("The JSON value could not be converted to DevLaunchpadConfig.");
+      var cfg = fallbackConfig();
+      FIELD_ORDER.forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(raw, k)) { checkType(k, raw[k]); cfg[k] = raw[k]; }
+      });
+      if (!cfg.PinnedRepos) cfg.PinnedRepos = [];
+      if (!cfg.RecentRepos) cfg.RecentRepos = [];
+      lastBadText = null;
+      setStatus(true, "Valid. Dev Launchpad would load this file as-is.");
+      return cfg;
+    } catch (e) {
+      if (lastBadText !== text) { debug("Load failed: " + e.message); lastBadText = text; }
+      setStatus(false, "Load would fail (" + e.message + "). Dev Launchpad logs it to debug.log and uses its built-in defaults.");
+      return fallbackConfig();
+    }
+  }
+
+  function save(cfg) {
+    var out = {};
+    FIELD_ORDER.forEach(function (k) {
+      var v = cfg[k];
+      if (k === "LocalUrls" || k === "FavoriteWebsites") v = (v || []).map(function (u) { return { Title: u.Title || "", Url: u.Url || "" }; });
+      if (k === "CustomCommands") v = (v || []).map(function (c) { return { Title: c.Title || "", Type: c.Type || "", Target: c.Target || "", Arguments: c.Arguments || "" }; });
+      out[k] = v;
+    });
+    writeConfigText(JSON.stringify(out, null, 2));
+    debug("Config saved.");
+    load();
+  }
+
+  function setStatus(ok, msg) {
+    cfgStatus.className = "status " + (ok ? "ok" : "bad");
+    cfgStatus.textContent = msg;
+  }
+
+  // ---------------------------------------------------------------- launch log (ProcessLauncher)
+  var logEl = $("#log");
+  function logEntry(kind, what, cmd, effect, extra) {
+    var empty = logEl.querySelector(".empty");
+    if (empty) empty.remove();
+    var li = el("li", kind === "toast" ? "toast-entry" : (kind === "fail" ? "fail" : ""));
+    li.appendChild(el("span", "what", what));
+    if (cmd) li.appendChild(el("code", "cmd", cmd));
+    if (effect) li.appendChild(el("div", "eff", effect));
+    if (extra) li.appendChild(extra);
+    logEl.insertBefore(li, logEl.firstChild);
+    while (logEl.children.length > 40) logEl.removeChild(logEl.lastChild);
+    return li;
+  }
+
+  var DISMISS = { type: "dismiss" };
+  function toast(msg) { return { type: "toast", msg: msg }; }
+
+  // ProcessLauncher.Start: Process.Start then CommandResult.Dismiss().
+  function start(what, fileName, args, cwd, effect, extra) {
+    var cmd = fileName + (blank(args) ? "" : " " + args);
+    logEntry("launch", what, cmd + (cwd ? "\n(working directory: " + cwd + ")" : ""), effect, extra);
+    return DISMISS;
+  }
+  function failToast(what, msg) { logEntry("fail", what, null, "Toast: " + msg); return toast(msg); }
+
+  function isWindowsTerminal(cmd) {
+    var exe = lower(String(cmd).split(/[\\\/]/).pop().replace(/\.[^.]*$/, ""));
+    return exe === "wt" || exe === "wtd";
+  }
+  function openFolder(what, path) {
+    if (!dirExists(path)) return failToast(what, "Folder not found: " + path);
+    return start(what, "explorer.exe", q(path), null, "Opens the folder in File Explorer.");
+  }
+  function openUrl(what, url) {
+    if (blank(url)) return failToast(what, "No URL configured.");
+    return start(what, url, "", null, "Shell-executes the URL, so it opens in your default browser.");
+  }
+  function openInEditor(what, path) {
+    var cfg = load();
+    if (blank(cfg.EditorCommand)) return failToast(what, "No editor command configured.");
+    return start(what, cfg.EditorCommand, q(path), null, "Opens the folder in your configured editor.");
+  }
+  function openInTerminal(what, path) {
+    var cfg = load();
+    if (blank(cfg.TerminalCommand)) return failToast(what, "No terminal command configured.");
+    if (!dirExists(path)) return failToast(what, "Folder not found: " + path);
+    if (isWindowsTerminal(cfg.TerminalCommand)) {
+      return start(what, cfg.TerminalCommand, "-d " + q(path), null, "Windows Terminal ignores the parent's working directory, so Dev Launchpad passes -d.");
+    }
+    return start(what, cfg.TerminalCommand, "", path, "Classic shells start in the working directory.");
+  }
+  function runCommand(what, target, args) {
+    if (blank(target)) return failToast(what, "No command target configured.");
+    return start(what, target, args, null, "Shell-executes the target with its arguments.");
+  }
+  function runWsl(what, cmd, args) {
+    if (blank(cmd)) return failToast(what, "No WSL command configured.");
+    return start(what, "wsl.exe", blank(args) ? "-- " + cmd : "-- " + cmd + " " + args, null, "Runs the command inside your default WSL distribution.");
+  }
+  function openSsh(what, host) {
+    if (blank(host)) return failToast(what, "No SSH host configured.");
+    var cfg = load();
+    if (blank(cfg.TerminalCommand)) return failToast(what, "No terminal command configured.");
+    if (isWindowsTerminal(cfg.TerminalCommand)) return start(what, cfg.TerminalCommand, "-- ssh " + host, null, "Opens an SSH session in a new Windows Terminal tab.");
+    return start(what, "ssh", host, null, "Starts ssh directly in a console window.");
+  }
+  function copyText(what, text, msg) {
+    if (blank(text)) return failToast(what, "Nothing to copy.");
+    logEntry("toast", what, "Clipboard ← " + text, "Toast: " + msg + " (simulated: your clipboard is untouched)");
+    return toast(msg);
+  }
+
+  // ---------------------------------------------------------------- repositories (RepoPage)
+  function scan(root) {
+    var r = lower(trimEndSlash(root));
+    return REPOS.filter(function (x) { return lower(x.full).indexOf(r + "\\") === 0; }).map(function (x) {
+      var st = x.branches[x.branch];
+      return { repo: x, name: x.full.slice(trimEndSlash(root).length + 1), full: x.full, branch: x.branch,
+        type: x.type, web: x.web, dirty: st.dirty, remote: st.remote, sync: st.sync, stash: x.stash };
+    });
+  }
+  function subtitle(e) {
+    var tags = [];
+    var b = e.branch;
+    if (e.remote && !e.sync) b += " ↕";
+    if (e.dirty) b += " *";
+    if (e.stash > 0) b += " ~" + e.stash;
+    tags.push("[" + b + "]");
+    if (e.type) tags.push("(" + e.type + ")");
+    return tags.join("  ") + "  " + e.full;
+  }
+  function statusTokens(e) {
+    var s = "";
+    if (e.dirty) s += "dirty ";
+    if (e.remote && !e.sync) s += "unsynced ahead behind ";
+    if (e.stash > 0) s += "stashed stash ";
+    return s;
+  }
+  function rankIn(list, path) {
+    for (var i = 0; i < list.length; i++) if (lower(list[i]) === lower(path)) return i;
+    return Infinity;
+  }
+  function hostKind(url) {
+    var h = lower(url.replace(/^[a-z]+:\/\//i, "").split("/")[0]);
+    if (h.indexOf("github") !== -1) return "github";
+    if (h.indexOf("gitlab") !== -1) return "gitlab";
+    if (h.indexOf("bitbucket") !== -1) return "bitbucket";
+    return null;
+  }
+  function recordRecent(path) {
+    var cfg = load();
+    cfg.RecentRepos = cfg.RecentRepos.filter(function (p) { return lower(p) !== lower(path); });
+    cfg.RecentRepos.unshift(path);
+    if (cfg.RecentRepos.length > 8) cfg.RecentRepos.length = 8;
+    save(cfg);
+  }
+  function launchRepo(name, path, fn) {
+    return { name: name, run: function () { recordRecent(path); return fn(); } };
+  }
+
+  function repoItems(query) {
+    var cfg = load();
+    var root = cfg.RepoRoot;
+    if (blank(root) || !dirExists(root)) {
+      return [{ title: "Projects folder not found", sub: blank(root) ? "(repo root not configured)" : root, icon: "info" }];
+    }
+    var list = scan(root);
+    if (!blank(query)) {
+      list = list.filter(function (e) {
+        return has(e.name, query) || has(e.full, query) || (e.type && has(e.type, query)) || has(statusTokens(e), query);
+      });
+    }
+    list.sort(function (a, b) {
+      var pa = rankIn(cfg.PinnedRepos, a.full), pb = rankIn(cfg.PinnedRepos, b.full);
+      var ga = pa === Infinity ? 1 : 0, gb = pb === Infinity ? 1 : 0;
+      if (ga !== gb) return ga - gb;
+      if (pa !== pb) return pa < pb ? -1 : 1;
+      var ra = rankIn(cfg.RecentRepos, a.full), rb = rankIn(cfg.RecentRepos, b.full);
+      if (ra !== rb) return ra < rb ? -1 : 1;
+      return lower(a.name) < lower(b.name) ? -1 : (lower(a.name) > lower(b.name) ? 1 : 0);
+    });
+    var items = list.map(function (e) {
+      var pinned = rankIn(cfg.PinnedRepos, e.full) !== Infinity;
+      var path = e.full;
+      var more = [
+        launchRepo("Open Folder", path, function () { return openFolder("Open Folder · " + e.name, path); }),
+        launchRepo("Open in Terminal", path, function () { return openInTerminal("Open in Terminal · " + e.name, path); }),
+        "sep",
+        { name: "Copy Path", run: function () { return copyText("Copy Path · " + e.name, path, "Copied repository path."); } }
+      ];
+      if (e.web) {
+        var kind = hostKind(e.web);
+        var label = has(e.web, "github.com") ? "Open on GitHub" : "Open Remote in Browser";
+        more.push(launchRepo(label, path, function () { return openUrl(label + " · " + e.name, e.web); }));
+        if (kind) {
+          var base = e.web.replace(/\/+$/, "");
+          var issues = kind === "gitlab" ? base + "/-/issues" : base + "/issues";
+          var prs = kind === "github" ? base + "/pulls" : (kind === "gitlab" ? base + "/-/merge_requests" : base + "/pull-requests");
+          var prLabel = "Open " + (kind === "gitlab" ? "Merge Requests" : "Pull Requests");
+          more.push({ name: "Open Issues", run: function () { return openUrl("Open Issues · " + e.name, issues); } });
+          more.push({ name: prLabel, run: function () { return openUrl(prLabel + " · " + e.name, prs); } });
+        }
+        var cloneCmd = "git clone " + (/\.git$/i.test(e.web) ? e.web : e.web + ".git");
+        more.push({ name: "Copy Clone Command", run: function () { return copyText("Copy Clone Command · " + e.name, cloneCmd, "Copied clone command."); } });
+      }
+      more.push("sep");
+      more.push({ name: pinned ? "Unpin" : "Pin", run: function () {
+        var c = load();
+        var before = c.PinnedRepos.length;
+        c.PinnedRepos = c.PinnedRepos.filter(function (p) { return lower(p) !== lower(path); });
+        var pinnedNow = c.PinnedRepos.length === before;
+        if (pinnedNow) c.PinnedRepos.push(path);
+        save(c);
+        var msg = pinnedNow ? "Pinned repository." : "Unpinned repository.";
+        logEntry("toast", (pinnedNow ? "Pin" : "Unpin") + " · " + e.name, null, "Saved to PinnedRepos in config.json. Toast: " + msg);
+        return toast(msg);
+      } });
+      var others = Object.keys(e.repo.branches).filter(function (b) { return b !== e.branch; }).slice(0, 15);
+      if (others.length) {
+        more.push("sep");
+        others.forEach(function (b) {
+          more.push({ name: "Switch to " + b, run: function () {
+            logEntry("toast", "Switch branch · " + e.name, "git checkout " + b + "\n(working directory: " + path + ", hidden window, waits up to 30 s)",
+              "Toast: Switched to " + b + ". The list refreshes with the new branch.");
+            e.repo.branch = b;
+            return toast("Switched to " + b + ".");
+          } });
+        });
+      }
+      return {
+        title: e.name, sub: subtitle(e), icon: pinned ? "pin" : "repo",
+        primary: launchRepo("Open in Editor", path, function () { return openInEditor("Open in Editor · " + e.name, path); }),
+        more: more
+      };
+    });
+    if (!items.length) {
+      items.push({ title: blank(query) ? "No git repositories found" : "No matching repositories", sub: root, icon: "info" });
+    }
+    return items;
+  }
+
+  // ---------------------------------------------------------------- other pages
+  function urlPage(listName, emptyTitle, invalidTitle, icn) {
+    return function () {
+      var cfg = load();
+      var list = cfg[listName];
+      if (!list || !list.length) return [{ title: emptyTitle, sub: "Add entries to config.json", icon: "info" }];
+      var items = [];
+      list.forEach(function (u) {
+        if (blank(u.Title) || blank(u.Url)) return;
+        items.push({ title: "Open " + u.Title, sub: u.Url, icon: icn,
+          primary: { name: "Open " + u.Title, run: function () { return openUrl("Open " + u.Title, u.Url); } } });
+      });
+      if (!items.length) items.push({ title: invalidTitle, sub: "Check config.json", icon: "info" });
+      return items;
+    };
+  }
+
+  function devToolsItems() {
+    var cfg = load();
+    function launch(name, file) {
+      return { name: name, run: function () {
+        if (blank(file)) return failToast(name, "Could not launch \"(unknown)\": Cannot start process because a file name has not been provided.");
+        return start(name, file, "", null, "Starts the application.");
+      } };
+    }
+    return [
+      { title: "Open Editor", sub: "Launch " + cfg.EditorCommand, icon: "code", primary: launch("Open Editor", cfg.EditorCommand) },
+      { title: "Open PowerShell", sub: "Launch Windows PowerShell", icon: "terminal", primary: launch("Open PowerShell", "powershell.exe") },
+      { title: "Open Terminal", sub: "Launch " + cfg.TerminalCommand, icon: "terminal", primary: launch("Open Terminal", cfg.TerminalCommand) },
+      { title: "Terminal in Projects Root", sub: "Open terminal at " + cfg.RepoRoot, icon: "terminal",
+        primary: { name: "Terminal in Projects Root", run: function () { return openInTerminal("Terminal in Projects Root", cfg.RepoRoot); } } }
+    ];
+  }
+
+  // CloneRepoPage.ExtractRepoName
+  function extractRepoName(url) {
+    if (blank(url)) return null;
+    var t = url.replace(/[\/\\]+$/, "");
+    if (/\.git$/i.test(t)) t = t.slice(0, -4);
+    if (/^git@/i.test(t)) { var c = t.indexOf(":"); if (c >= 0) t = t.slice(c + 1); }
+    var i = Math.max(t.lastIndexOf("/"), t.lastIndexOf("\\"), t.lastIndexOf(":"));
+    if (i < 0) return null;
+    var n = t.slice(i + 1);
+    return blank(n) ? null : n;
+  }
+  function cloneItems(query) {
+    var url = (query || "").trim();
+    if (!url) return [{ title: "Paste a Git URL above to clone", sub: "Supports https://, git@, and ssh:// URLs", icon: "info" }];
+    var name = extractRepoName(url);
+    if (name === null) return [{ title: "Not a recognizable Git URL", sub: url, icon: "info" }];
+    var cfg = load();
+    if (blank(cfg.RepoRoot)) return [{ title: "Repo root not configured", sub: "Set RepoRoot in Settings first", icon: "info" }];
+    var dest = combine(cfg.RepoRoot, name);
+    return [{ title: "Clone " + name, sub: "→ " + dest, icon: "clone", primary: { name: "Clone " + name, run: function () {
+      logEntry("toast", "Clone " + name, "git clone " + q(url) + " " + q(dest) + "\n(working directory: " + cfg.RepoRoot + ", no window)",
+        "Runs in the background so the palette stays responsive. Toast: Git operation started in the background.");
+      return toast("Git operation started in the background.");
+    } } }];
+  }
+
+  function syncItems() {
+    var cfg = load();
+    var root = cfg.RepoRoot;
+    if (blank(root)) return [{ title: "Repo root not configured", sub: "Set RepoRoot in Settings first", icon: "info" }];
+    if (!dirExists(root)) return [{ title: "Projects folder not found", sub: root, icon: "info" }];
+    return [
+      { title: "Sync All GitHub Repositories", sub: "Clone new + fast-forward pull existing repos into " + root, icon: "sync",
+        primary: { name: "Sync All GitHub Repositories", run: function () { return runSync(root); } } },
+      { title: "Copy Sync Script", sub: "Copy the PowerShell script to the clipboard to review or run manually", icon: "copy",
+        primary: { name: "Copy Sync Script", run: function () {
+          var d = el("details", "script");
+          d.appendChild(el("summary", null, "Show the script"));
+          d.appendChild(el("pre", "term", SYNC_SCRIPT));
+          logEntry("toast", "Copy Sync Script", "Clipboard ← sync-all-github-repos.ps1 (" + SYNC_SCRIPT.split("\n").length + " lines)",
+            "Toast: Copied sync script (PowerShell). (simulated: your clipboard is untouched)", d);
+          return toast("Copied sync script (PowerShell).");
+        } } },
+      { title: "Open Projects Folder", sub: root, icon: "repo",
+        primary: { name: "Open Projects Folder", run: function () { return openFolder("Open Projects Folder", root); } } }
+    ];
+  }
+
+  var syncTimer = null;
+  function runSync(root) {
+    var scriptPath = CONFIG_DIR + "\\sync-all-github-repos.ps1";
+    var term = el("pre", "term");
+    var d = el("div");
+    d.appendChild(el("div", "eff", "Scripted transcript for a made-up GitHub account (example-dev), replayed against this page's sample folders:"));
+    d.appendChild(term);
+    var details = el("details", "script");
+    details.appendChild(el("summary", null, "Show the generated script"));
+    details.appendChild(el("pre", "term", SYNC_SCRIPT));
+    d.appendChild(details);
+    start("Sync All GitHub Repositories", "powershell.exe", "-NoExit -ExecutionPolicy Bypass -File " + q(scriptPath), root,
+      "Writes the script next to config.json, then runs it in a visible PowerShell window that stays open.", d);
+
+    // Which of the account's repos already exist directly under RepoRoot decides clone vs pull.
+    var account = ["example-dev/api-gateway", "example-dev/web-dashboard", "example-dev/compose-stack", "example-dev/cli-tools", "example-dev/design-tokens"];
+    var lines = [["c", "Checking GitHub CLI authentication..."], ["c", "Fetching repository list..."]];
+    var cloned = 0, updated = 0, failed = 0;
+    account.forEach(function (full) {
+      var dir = full.split("/").pop();
+      var local = REPOS.filter(function (r) { return lower(r.full) === lower(combine(root, dir)); })[0];
+      if (local) {
+        lines.push(["y", "updating " + dir]);
+        var st = local.branches[local.branch];
+        if (st.dirty && st.remote && !st.sync) {
+          lines.push(["r", "fatal: Not possible to fast-forward, aborting."]); failed++;
+        } else if (st.remote && !st.sync) {
+          lines.push(["", "Fast-forward"]); updated++;
+        } else { lines.push(["", "Already up to date."]); updated++; }
+      } else {
+        lines.push(["g", "cloning " + full]);
+        lines.push(["", "Cloning into '" + dir + "'..."]); cloned++;
+      }
+    });
+    lines.push(["", ""]);
+    lines.push(["c", "Done. Cloned " + cloned + ", updated " + updated + ", failed " + failed + "."]);
+    if (syncTimer) clearInterval(syncTimer);
+    var i = 0;
+    syncTimer = setInterval(function () {
+      if (i >= lines.length) { clearInterval(syncTimer); syncTimer = null; return; }
+      var s = el("span", lines[i][0], lines[i][1] + "\n");
+      term.appendChild(s);
+      term.scrollTop = term.scrollHeight;
+      i++;
+    }, 260);
+    return DISMISS;
+  }
+
+  function customItems() {
+    var cfg = load();
+    var list = cfg.CustomCommands;
+    if (!list || !list.length) return [{ title: "No custom commands configured", sub: "Add entries to config.json", icon: "info" }];
+    var items = [];
+    function sub2(t, a) { return blank(a) ? t : t + " " + a; }
+    list.forEach(function (c) {
+      if (blank(c.Title) || blank(c.Type) || blank(c.Target)) return;
+      var type = lower(c.Type.trim());
+      var args = c.Arguments || "";
+      var it = { title: c.Title, icon: "bolt" };
+      switch (type) {
+        case "url": it.sub = c.Target; it.icon = "globe"; it.primary = { name: c.Title, run: function () { return openUrl(c.Title, c.Target); } }; break;
+        case "folder": it.sub = c.Target; it.icon = "repo"; it.primary = { name: c.Title, run: function () { return openFolder(c.Title, c.Target); } }; break;
+        case "command": it.sub = sub2(c.Target, args); it.primary = { name: c.Title, run: function () { return runCommand(c.Title, c.Target, args); } }; break;
+        case "terminal-in-folder": it.sub = c.Target; it.icon = "terminal"; it.primary = { name: c.Title, run: function () { return openInTerminal(c.Title, c.Target); } }; break;
+        case "wsl-command": it.sub = sub2("wsl: " + c.Target, args); it.icon = "terminal"; it.primary = { name: c.Title, run: function () { return runWsl(c.Title, c.Target, args); } }; break;
+        case "ssh": it.sub = "ssh " + c.Target; it.icon = "terminal"; it.primary = { name: c.Title, run: function () { return openSsh(c.Title, c.Target); } }; break;
+        default: return;
+      }
+      items.push(it);
+    });
+    if (!items.length) items.push({ title: "No valid custom commands configured", sub: "Check config.json", icon: "info" });
+    return items;
+  }
+
+  function configItems() {
+    var cfg = load();
+    function act(name, sub, fn, icn) { return { title: name, sub: sub, icon: icn || "file", primary: { name: name, run: fn } }; }
+    return [
+      { title: "Storage Mode", sub: "Using packaged app storage (LocalFolder)", icon: "info" },
+      { title: "Current Repo Root", sub: cfg.RepoRoot, icon: "info" },
+      { title: "Editor Command", sub: cfg.EditorCommand, icon: "info" },
+      { title: "Terminal Command", sub: cfg.TerminalCommand, icon: "info" },
+      { title: "Config File", sub: CONFIG_PATH, icon: "info" },
+      { title: "Debug Log", sub: DEBUG_PATH, icon: "info" },
+      act("Open Config Folder", CONFIG_DIR, function () { return start("Open Config Folder", "explorer.exe", q(CONFIG_DIR), null, "Opens the config folder in File Explorer."); }, "repo"),
+      act("Open Config File", "Open config.json with the default app", function () { return start("Open Config File", CONFIG_PATH, "", null, "Opens config.json with the app associated with .json files."); }),
+      act("Open Config File in Editor", "Edit config.json using your configured editor", function () {
+        var c = load();
+        if (blank(c.EditorCommand)) return failToast("Open Config File in Editor", "No editor command configured.");
+        return start("Open Config File in Editor", c.EditorCommand, q(CONFIG_PATH), null, "Opens config.json in your configured editor.");
+      }),
+      act("Open Debug Log", "Inspect config creation and load issues", function () {
+        var body = debugLines.length ? debugLines.join("\n") : "Debug log created.";
+        return start("Open Debug Log", DEBUG_PATH, "", null, "Opens debug.log. What it contains in this session:", el("pre", "term", body));
+      }),
+      act("Reload Config", "Reload config.json from disk", function () {
+        load(); debug("Config reloaded.");
+        logEntry("toast", "Reload Config", null, "Toast: Configuration reloaded from disk.");
+        return toast("Configuration reloaded from disk.");
+      }, "sync"),
+      act("Export Config Backup", "Copy config.json into the backups folder before upgrades or Store testing", function () {
+        var d = new Date();
+        var stem = "config-" + d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "-" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds());
+        var path = CONFIG_DIR + "\\backups\\" + stem + ".json";
+        debug("Config backup exported to: " + path);
+        logEntry("toast", "Export Config Backup", "copy config.json → " + path, "Toast: Configuration backup exported.");
+        return toast("Configuration backup exported.");
+      }, "copy"),
+      act("Reset Config to Defaults", "Overwrite config.json with default settings", function () {
+        writeConfigText(DEFAULT_JSON); load();
+        debug("Default config written successfully to: " + CONFIG_PATH);
+        debug("Config reset to defaults.");
+        logEntry("toast", "Reset Config to Defaults", null, "config.json overwritten with the defaults. Toast: Configuration reset to defaults.");
+        return toast("Configuration reset to defaults.");
+      }, "sync")
+    ];
+  }
+
+  var TOP = [
+    { title: "Repositories", sub: "Browse and open Git repositories", icon: "repo", page: "repos" },
+    { title: "Developer Tools", sub: "Quick access to dev applications", icon: "tools", page: "devtools" },
+    { title: "Local Servers", sub: "Open localhost development URLs", icon: "server", page: "local" },
+    { title: "Favorite Websites", sub: "Quick access to bookmarked sites", icon: "star", page: "favs" },
+    { title: "Clone Repository", sub: "Clone a Git repository by URL into your projects folder", icon: "clone", page: "clone" },
+    { title: "Sync All GitHub Repos", sub: "Clone new and fast-forward-pull existing GitHub repos into your projects folder", icon: "sync", page: "sync" },
+    { title: "Custom Commands", sub: "Run your configured custom commands", icon: "bolt", page: "custom" },
+    { title: "Configuration", sub: "Manage Dev Launchpad settings", icon: "gear", page: "config" },
+    { title: "Settings", sub: "Edit repo root, editor, and terminal in Command Palette", icon: "sliders", page: "settings" }
+  ];
+
+  // dynamic = the page filters on the search text itself (DynamicListPage); otherwise the palette filters.
+  var PAGES = {
+    home: { title: "Command Palette", placeholder: "Search commands…", items: function () {
+      return TOP.map(function (t) { return { title: t.title, sub: t.sub, icon: t.icon, primary: { name: "Open", run: function () { return { type: "goto", page: t.page }; } } }; });
+    } },
+    repos: { title: "Repositories", placeholder: "Search repositories...", dynamic: true, items: repoItems },
+    devtools: { title: "Developer Apps", placeholder: "Filter…", items: devToolsItems },
+    local: { title: "Local Servers", placeholder: "Filter…", items: urlPage("LocalUrls", "No local URLs configured", "No valid local URLs configured", "server") },
+    favs: { title: "Favorite Websites", placeholder: "Filter…", items: urlPage("FavoriteWebsites", "No favorite websites configured", "No valid favorite websites configured", "star") },
+    clone: { title: "Clone Repository", placeholder: "Paste a Git URL to clone…", dynamic: true, items: cloneItems },
+    sync: { title: "Sync All GitHub Repos", placeholder: "Filter…", items: syncItems },
+    custom: { title: "Custom Commands", placeholder: "Filter…", items: customItems },
+    config: { title: "Configuration", placeholder: "Filter…", items: configItems },
+    settings: { title: "Settings", form: true }
+  };
+
+  // ---------------------------------------------------------------- palette UI
+  var listEl = $("#list"), qEl = $("#q"), menuEl = $("#menu"), toastEl = $("#toast"), crumbEl = $("#crumb");
+  var backEl = $("#back"), closedEl = $("#closed"), footActs = $("#foot-acts");
+  var stack = [{ page: "home", query: "" }];
+  var sel = 0, items = [], menuOpen = false, menuSel = 0, menuItems = [], toastTimer = null;
+
+  function cur() { return stack[stack.length - 1]; }
+
+  function currentItems() {
+    var c = cur(), p = PAGES[c.page];
+    var all = p.items(c.query);
+    if (p.dynamic || blank(c.query)) return all;
+    return all.filter(function (it) { return has(it.title, c.query) || has(it.sub || "", c.query); });
+  }
+
+  function render() {
+    var c = cur(), p = PAGES[c.page];
+    crumbEl.textContent = c.page === "home" ? "Command Palette" : "Dev Launchpad › " + p.title;
+    backEl.hidden = stack.length === 1;
+    qEl.placeholder = p.placeholder || "";
+    qEl.hidden = !!p.form;
+    if (qEl.value !== c.query) qEl.value = c.query;
+    listEl.innerHTML = "";
+    if (p.form) { renderForm(); footActs.innerHTML = ""; closeMenu(); return; }
+    items = currentItems();
+    if (sel >= items.length) sel = Math.max(0, items.length - 1);
+    items.forEach(function (it, i) {
+      var li = el("li", "item" + (i === sel ? " sel" : "") + (it.primary ? "" : " noop"));
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", i === sel ? "true" : "false");
+      li.id = "opt-" + i;
+      var ic = el("span", "ico"); ic.innerHTML = icon(it.icon);
+      var txt = el("div");
+      txt.appendChild(el("div", "it-title", it.title));
+      if (it.sub != null && it.sub !== "") txt.appendChild(el("div", "it-sub", it.sub));
+      li.appendChild(ic); li.appendChild(txt);
+      if (it.more && it.more.length) {
+        var mb = el("button", "more-btn", "⋯");
+        mb.type = "button"; mb.setAttribute("aria-label", "More actions");
+        mb.addEventListener("click", function (ev) { ev.stopPropagation(); sel = i; render(); openMenu(); });
+        li.appendChild(mb);
+      } else { li.appendChild(el("span")); }
+      li.addEventListener("click", function () { sel = i; invoke(); });
+      li.addEventListener("contextmenu", function (ev) { if (it.more) { ev.preventDefault(); sel = i; render(); openMenu(); } });
+      listEl.appendChild(li);
+    });
+    if (items[sel]) qEl.setAttribute("aria-activedescendant", "opt-" + sel); else qEl.removeAttribute("aria-activedescendant");
+    var selEl = listEl.children[sel];
+    if (selEl && selEl.scrollIntoView) selEl.scrollIntoView({ block: "nearest" });
+    renderFoot();
+    if (menuOpen) renderMenu();
+  }
+
+  function renderFoot() {
+    footActs.innerHTML = "";
+    var it = items[sel];
+    if (!it) return;
+    if (it.primary) {
+      var a = el("span"); a.appendChild(el("b", null, it.primary.name)); a.appendChild(document.createTextNode(" ↵"));
+      footActs.appendChild(a);
+    }
+    if (it.more && it.more.length) {
+      var m = el("span"); m.appendChild(document.createTextNode("More ")); m.appendChild(el("kbd", null, "Ctrl")); m.appendChild(document.createTextNode("+")); m.appendChild(el("kbd", null, "K"));
+      footActs.appendChild(m);
+    }
+  }
+
+  function renderForm() {
+    var cfg = load();
+    var wrap = el("li", "form");
+    var fields = [
+      ["RepoRoot", "Repository root folder", "Folder scanned recursively for Git repositories (e.g. C:\\Projects)."],
+      ["EditorCommand", "Editor command", "Executable used for \"Open in Editor\" actions (e.g. code)."],
+      ["TerminalCommand", "Terminal command", "Executable used for \"Open in Terminal\" actions (e.g. wt, pwsh, powershell, cmd)."]
+    ];
+    var inputs = {};
+    fields.forEach(function (f) {
+      var id = "set-" + f[0];
+      var lab = el("label", null, f[1]); lab.htmlFor = id;
+      var desc = el("span", "desc", f[2]);
+      var inp = el("input"); inp.id = id; inp.value = cfg[f[0]] || ""; inp.autocomplete = "off"; inp.spellcheck = false;
+      inputs[f[0]] = inp;
+      wrap.appendChild(lab); wrap.appendChild(desc); wrap.appendChild(inp);
+    });
+    var row = el("div", "row");
+    var saveBtn = el("button", "btn", "Save"); saveBtn.type = "button";
+    var note = el("span", "desc", "Blank fields are ignored, so they never erase a saved value.");
+    saveBtn.addEventListener("click", function () {
+      var c = load();
+      Object.keys(inputs).forEach(function (k) { if (!blank(inputs[k].value)) c[k] = inputs[k].value; });
+      save(c);
+      logEntry("toast", "Settings saved", null, "RepoRoot, EditorCommand and TerminalCommand written back to config.json.");
+      showToast("Settings saved.");
+      render();
+    });
+    row.appendChild(saveBtn); row.appendChild(note);
+    wrap.appendChild(row);
+    listEl.appendChild(wrap);
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg; toastEl.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 2600);
+  }
+
+  function handle(res) {
+    if (!res) { render(); return; }
+    if (res.type === "dismiss") { closeMenu(); closedEl.hidden = false; render(); $("#reopen").focus(); return; }
+    if (res.type === "toast") showToast(res.msg);
+    if (res.type === "goto") { stack.push({ page: res.page, query: "" }); sel = 0; }
+    render();
+  }
+
+  function invoke() {
+    var it = items[sel];
+    if (!it || !it.primary) return;
+    closeMenu();
+    handle(it.primary.run());
+  }
+
+  function openMenu() {
+    var it = items[sel];
+    if (!it || !it.more || !it.more.length) return;
+    menuOpen = true; menuSel = 0;
+    menuItems = it.more;
+    renderMenu();
+  }
+  function renderMenu() {
+    var it = items[sel];
+    if (!it || it.more !== menuItems) { menuItems = it && it.more ? it.more : []; }
+    if (!menuItems.length) { closeMenu(); return; }
+    menuEl.innerHTML = "";
+    menuEl.appendChild(el("li", "head", it.title));
+    var idx = 0;
+    menuItems.forEach(function (m) {
+      if (m === "sep") { var s = el("li", "sep"); s.setAttribute("role", "separator"); menuEl.appendChild(s); return; }
+      var myIdx = idx++;
+      var li = el("li", myIdx === menuSel ? "sel" : "", m.name);
+      li.setAttribute("role", "menuitem");
+      li.addEventListener("click", function () { menuSel = myIdx; runMenu(); });
+      menuEl.appendChild(li);
+    });
+    menuEl.hidden = false;
+  }
+  function menuCmds() { return menuItems.filter(function (m) { return m !== "sep"; }); }
+  function runMenu() {
+    var m = menuCmds()[menuSel];
+    closeMenu();
+    if (m) handle(m.run());
+  }
+  function closeMenu() { menuOpen = false; menuEl.hidden = true; }
+
+  function goBack() {
+    if (stack.length > 1) { stack.pop(); sel = 0; closeMenu(); render(); }
+  }
+
+  qEl.addEventListener("input", function () {
+    cur().query = qEl.value; sel = 0; closeMenu(); render();
+  });
+  qEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && lower(e.key) === "k") {
+      e.preventDefault(); if (menuOpen) closeMenu(); else openMenu(); return;
+    }
+    if (menuOpen) {
+      var n = menuCmds().length;
+      if (e.key === "ArrowDown") { e.preventDefault(); menuSel = (menuSel + 1) % n; renderMenu(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); menuSel = (menuSel - 1 + n) % n; renderMenu(); }
+      else if (e.key === "Enter") { e.preventDefault(); runMenu(); }
+      else if (e.key === "Escape") { e.preventDefault(); closeMenu(); }
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); if (items.length) { sel = (sel + 1) % items.length; render(); } }
+    else if (e.key === "ArrowUp") { e.preventDefault(); if (items.length) { sel = (sel - 1 + items.length) % items.length; render(); } }
+    else if (e.key === "Enter") { e.preventDefault(); invoke(); }
+    else if (e.key === "Escape") { e.preventDefault(); if (qEl.value) { qEl.value = ""; cur().query = ""; render(); } else goBack(); }
+    else if (e.key === "Backspace" && qEl.value === "") { e.preventDefault(); goBack(); }
+  });
+  backEl.addEventListener("click", function () { goBack(); focusInput(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && PAGES[cur().page].form && closedEl.hidden) { goBack(); focusInput(); }
+  });
+  $("#reopen").addEventListener("click", function () {
+    closedEl.hidden = true; stack = [{ page: "home", query: "" }]; sel = 0; render(); focusInput();
+  });
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (!menuOpen || menuEl.contains(t) || (t.closest && (t.closest(".more-btn") || t.closest("[data-tour]")))) return;
+    closeMenu();
+  });
+
+  var cfgTimer = null;
+  cfgEl.addEventListener("input", function () {
+    if (cfgTimer) clearTimeout(cfgTimer);
+    cfgTimer = setTimeout(function () { if (!PAGES[cur().page].form) render(); else load(); }, 250);
+  });
+
+  function focusInput() {
+    if (window.matchMedia && window.matchMedia("(pointer: fine)").matches && !qEl.hidden) qEl.focus();
+  }
+
+  // ---------------------------------------------------------------- guided scenarios
+  function goTo(page, query) {
+    closedEl.hidden = true; closeMenu();
+    stack = [{ page: "home", query: "" }];
+    if (page !== "home") stack.push({ page: page, query: query || "" });
+    sel = 0; render();
+  }
+  var TOURS = {
+    rust: function () { goTo("repos", "rust"); },
+    dirty: function () { goTo("repos", "dirty"); },
+    menu: function () {
+      goTo("repos", "");
+      for (var i = 0; i < items.length; i++) if (items[i].title === "web-dashboard") { sel = i; break; }
+      render(); openMenu();
+    },
+    clone: function () { goTo("clone", "git@github.com:example-dev/cli-tools.git"); },
+    sync: function () { goTo("sync", ""); },
+    custom: function () {
+      var c = load();
+      var exists = (c.CustomCommands || []).some(function (x) { return x && x.Type === "ssh"; });
+      if (!exists) {
+        c.CustomCommands = (c.CustomCommands || []).concat([
+          { Title: "SSH to build server", Type: "ssh", Target: "dev@build.example.com", Arguments: "" },
+          { Title: "Run tests in WSL", Type: "wsl-command", Target: "make", Arguments: "test" }
+        ]);
+        save(c);
+        logEntry("toast", "config.json edited", null, "Added an ssh and a wsl-command entry to CustomCommands. Look at the config.json panel.");
+      }
+      goTo("custom", "");
+    },
+    root: function () {
+      var c = load();
+      c.RepoRoot = BASE + "\\mobile";
+      save(c);
+      logEntry("toast", "config.json edited", null, "RepoRoot set to C:\\Projects\\mobile. Repository names are now relative to it. Use Configuration › Reset Config to Defaults to undo.");
+      goTo("repos", "");
+    }
+  };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tour]"), function (b) {
+    b.addEventListener("click", function () { TOURS[b.getAttribute("data-tour")](); focusInput(); });
+  });
+
+  // ---------------------------------------------------------------- boot
+  writeConfigText(DEFAULT_JSON);
+  debug("Default config written successfully to: " + CONFIG_PATH);
+  render();
+})();
+</script>
+</body>
+</html>
