@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Demo page published**: `.github/workflows/demo-pages.yml` publishes `demo.html` (and nothing else from the repository) to GitHub Pages at https://esanacore.github.io/DevLaunchpad/ whenever the page changes; the README links the live copy.
 - **Interactive demo page** (`demo.html`, linked from the README): a self-contained, clearly labeled
   simulation of the Command Palette running Dev Launchpad. It reproduces the real top-level commands,
   page items, repository search (name, path, stack, and `dirty`/`unsynced`/`stashed` status words),
