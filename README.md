@@ -8,7 +8,7 @@ A Microsoft PowerToys Command Palette extension for managing developer workflows
 
 ## Demo
 
-**[Try the interactive demo](demo.html)**: a simulated Command Palette session in your browser.
+**[Try the interactive demo](demo.html)** ([live](https://esanacore.github.io/DevLaunchpad/)): a simulated Command Palette session in your browser.
 Search repositories by name, stack or git status, open the repo context menu, clone by URL, run
 the GitHub sync and edit a live `config.json`. Nothing is launched; the page shows the exact
 command each action would run. It is one self-contained HTML file, so open it from a clone with
